@@ -3,11 +3,9 @@
 }*/
 
 /*light blue: #007FB2  (0, 127, 178)*/
-/*darker blue: #06516D*/
+/*darker blue: #06516D  rgb(6, 81, 109) */
 /*green: #4BAF51*/
 /*background colour: #EEEEEE*/
-
-
 
 * {
 	font-family: Helvetica, Arial, sans-serif;
@@ -15,63 +13,76 @@
 }
 
 body {
-	background-image: url(seabirds-home-bg.png);
-	background-attachment: fixed;
-	background-position: bottom;
-	/*background-color: rgba(0, 127, 178, 0.5);*/
+	/*background-image: url(seabirds-home-bg.png);*/
+	/*background-attachment: fixed;*/
+	/*background-position: bottom;*/
+	background-color: #EEEEEE;
 }
 
 h1 {
 	color: #007FB2;
 	font-size: 200%;
-	/*font-family: 'Roboto Slab', serif;*/
+}
+
+h2 {
+	color: #007FB2;
+	font-size: 150%;
+}
+
+h3 {
+	color: #007FB2;
+	font-size: 120%;
 }
 
 p {
-	color: rgb(53, 158, 35);
+	color: rgb(6, 81, 109);
 	line-height: 20px
 }
 
 li {
 	list-style: none;
-	display: inline-block;
-	color: rgb(28, 109, 48);
+	/*display: inline-block;*/
+	color: rgb(6, 81, 109);
 }
 
 li:hover {
-	border: 1px solid black;
-	text-decoration: underline;
-	text-transform: uppercase;
+	/*border: 1px solid black;*/  
+	/*text-decoration: underline;*/
+	/*text-transform: uppercase;*/
 }
 
-img {
+/*img {
 	float: left;
-}
+}*/
 
-footer {
-	clear: both;
-	text-align: center;
-}
 
-.webtext {
-	/*border: 5px solid rgba(28, 109, 48, 0.5);*/
+/*.webtext {
+	border: 5px solid rgba(28, 109, 48, 0.5);
 	background: rgba(255, 255, 255, 0.8)
-}
+}*/
 
-.active {
+/*.active {
 	color: rgb(28, 109, 48);
 	font-style: italic;
-}
+}*/
 
 .footer {
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.8);
+  height: 30px;
+  padding: 5px;
+  background-color: rgba(0, 127, 178, 0.7);
   text-align: center;
+  color: #EEEEEE;
   font-style: italic;
-  font-size: 80%;
+  font-size: 100%;
+}
+
+.push {
+    /*automatically all the way to the right by pushing the margin to the left of the object*/
+    margin-left: auto;
 }
 
 /*#div1 {

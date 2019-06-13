@@ -1,145 +1,117 @@
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Shiny app to explore the methods in the density maps paper
+## Lizzie Pearmain & Ana Carneiro
+## June 2019
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+rm(list=ls())
+
 library(shiny)
+library(lubridate)
 
-
-setwd("C:\\Users\\eliza\\OneDrive\\Documents\\BirdLife\\Ana_bycatch\\App_v1")
+## set working directory
+setwd("C:\\Users\\eliza\\OneDrive\\Documents\\BirdLife\\Ana_bycatch\\App_v2")
 
 # rm(list=ls())
 
+## load source functions
 source("functions.R")
 
-# Define UI for dataset viewer app ----
-ui <- fluidPage(
+## Define app UI ----
+ui <- navbarPage("Seabird phenology", selected = "Introduction",
   
+  ## Link stylesheet and other HTML tags we need ----
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
-    tags$link(href="https://fonts.googleapis.com/css?family=Roboto+Slab&display=swap", rel="stylesheet")
+    # tags$link(href="https://fonts.googleapis.com/css?family=Roboto+Slab&display=swap", rel="stylesheet")
+    tags$div(class = "footer", "Disclaimer: this app is not finished")
   ),
   
-  # App title ----
-  titlePanel(h1("Seabird phenology")),
   
-  # Sidebar layout with input and output definitions ----
+  
+  ## TAB 0 - Introduction to the methods ----
+  tabPanel("Introduction",
+    titlePanel(h1("Introduction to the seabird density maps method")),
+    h3("Mapping the global distribution of seabird populations: a framework for integrating biologging, demographic and phenological datasets."),
+    tags$div(
+      "Steps:", tags$br(),
+      tags$ol(tags$li("1. Download data from the", tags$a(href="www.seabirdtracking.org", "Seabird Tracking Database")),
+              tags$li("2. Create one csv file per species"),
+              tags$li("3. etc."))
+    )
+  ),
+  
+  
+  ## TAB 1 - PHENOLOGY TABLE 1 ----
+  tabPanel("Phenology table 1",
+  
+    titlePanel(h1("Seabird phenology")),
+  ## Sidebar layout with input and output definitions ----
   sidebarLayout(
-    
-    # Sidebar panel for inputs ----
-    sidebarPanel(
-      
-      # # Input: Text for providing a caption ----
-      # # Note: Changes made to the caption in the textInput control
-      # # are updated in the output area immediately as you type
-      # textInput(inputId = "caption",
-      #           label = "Caption:",
-      #           value = "Data Summary"),
-      
-      # Input: Selector for choosing dataset ----
-      selectInput(inputId = "species_type",
-                  label = "Choose whether your species is annual or biennial",
-                  choices = c("annual", "biennial")),
-      
-      # Input: calendar entry for mena laying date ----
-      # numericInput(inputId = "laydate",
-      #              label = "Insert mean laying date",
-      #              value = 10),
-      # dateInput(inputId = "laydate",
-      #           label = "insert mean laying date (month and day only)",
-      #           format = "mm-dd",
-      #           value = "2000-01-01",
-      #           min = "2000-01-01",
-      #           max = "2000-12-31"),
-      textInput(inputId = "laydate_string", 
-                label = "enter mean laying date in format dd-mm", 
-                value = "01-01"
-                ),
-      
+    ## Sidebar panel for inputs ----
+    sidebarPanel(tags$p("This tab uses mean laying date and mean lengths of the incubation, brood-guard and post-brood stages to estimate average start dates of each section of the breeding cycle."), tags$br(),    
+      ## Input: Selector for choosing species type (this does nothing yet) ----
+      selectInput(inputId = "species_type", label = "Choose whether your species is annual or biennial", choices = c("annual", "biennial")),
+      ## Input mean length of pre-laying
+      numericInput(inputId = "prelay_length_days", label = "Insert mean pre-laying length in days", value = 0),
+      ## Input mean laying date as day-month
+      textInput(inputId = "laydate_string", label = "enter mean laying date in format dd-mm", value = "01-01"),
       # Input: numeric input for length of incubation
-      numericInput(inputId = "inc_length_days",
-                   label = "Insert mean incubation length in days",
-                   value = 25
-                   ),
-      
+      numericInput(inputId = "inc_length_days", label = "Insert mean incubation length in days", value = 25),
       # Input: numeric input for length of brood-guard
-      numericInput(inputId = "brood_length_days",
-                   label = "Insert mean brood-guard length in days",
-                   value = 25
-                   ),
-      
+      numericInput(inputId = "brood_length_days", label = "Insert mean brood-guard length in days", value = 25),
       # Input: numeric input for length of post-brood
-      numericInput(inputId = "post_length_days",
-                   label = "Insert mean post-guard length in days",
-                   value = 25
-                   )
-      
-    ),
+      numericInput(inputId = "post_length_days", label = "Insert mean post-guard length in days", value = 25)
+      ),
     
     # Main panel for displaying outputs ----
     mainPanel(
-      
       # # Output: Formatted text for caption ----
-      h3(textOutput("caption", container = span)),
-      
-      # # Output: Verbatim text for data summary ----
-      # verbatimTextOutput("summary"),
-      
+      # h3(textOutput("caption", container = span)),
+      h2("Average phenology timings for your population:"),
       # Output: HTML table with requested number of observations ----
-      tableOutput("view")
-      
+      tableOutput("phenTab1"),
+      tags$br(),
+      h2("Monthly average phenology for successful breeders:"),
+      tableOutput("phenTabBeta")
+      )
     )
-  )
+  ),
+  
+  tabPanel("Demography model",     
+    sidebarLayout(
+      sidebarPanel(
+        h2("Input demography parameters will go here.")
+      ),
+      mainPanel(
+        h2("Output from demography model will go here - both numbers of birds and figure 1 showing population stratification")
+      )
+    )
+  )  
 )
 
 # Define server logic to summarize and view selected dataset ----
 server <- function(input, output) {
   
-  # Return the requested dataset ----
-  # By declaring datasetInput as a reactive expression we ensure
-  # that:
-  #
-  # 1. It is only called when the inputs it depends on changes
-  # 2. The computation and result are shared by all the callers,
-  #    i.e. it only executes a single time
-  # datasetInput <- reactive({
-  #   switch(input$dataset,
-  #          "rock" = rock,
-  #          "pressure" = pressure,
-  #          "cars" = cars)
-  # })
-  
-  phenologyTable <- reactive({
-    phenTable1(input$laydate_string, input$inc_length_days, input$brood_length_days,
-               input$post_length_days)
+  ## Make the first phenTable1 table----
+  makePhenTable1 <- reactive({
+    phenTable1(input$laydate_string, input$prelay_length_days, input$inc_length_days, 
+               input$brood_length_days, input$post_length_days)
   })
   
-  # Create caption ----
-  # The output$caption is computed based on a reactive expression
-  # that returns input$caption. When the user changes the
-  # "caption" field:
-  #
-  # 1. This function is automatically called to recompute the output
-  # 2. New caption is pushed back to the browser for re-display
-  #
-  # Note that because the data-oriented reactive expressions
-  # below don't depend on input$caption, those expressions are
-  # NOT called when input$caption changes
-  # output$caption <- renderText({
-  #   paste("average laying date is", input$laydate_string)
-  # })
+  ## Make the second phenTableBeta table ----
+  makePhenTableBeta <- reactive({
+    phenTableBeta(makePhenTable1()) ## need to make this a function??
+  })
   
-  # Generate a summary of the dataset ----
-  # The output$summary depends on the datasetInput reactive
-  # expression, so will be re-executed whenever datasetInput is
-  # invalidated, i.e. whenever the input$dataset changes
-  # output$summary <- renderPrint({
-  #   dataset <- datasetInput()
-  #   summary(dataset)
-  # })
+  ## Render the first phenTable1 table ----
+  output$phenTab1 <- renderTable({
+    makePhenTable1()
+  })
   
-  # Show the first "n" observations ----
-  # The output$view depends on both the databaseInput reactive
-  # expression and input$obs, so it will be re-executed whenever
-  # input$dataset or input$obs is changed
-  
-  output$view <- renderTable({
-    phenologyTable()
+  ## Render the second phenTableBeta table ----
+  output$phenTabBeta <- renderTable({
+    makePhenTableBeta()
   })
   
 }
