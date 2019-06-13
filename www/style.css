@@ -1,0 +1,85 @@
+/*Selector {
+	Property: value;
+}*/
+
+/*light blue: #007FB2  (0, 127, 178)*/
+/*darker blue: #06516D*/
+/*green: #4BAF51*/
+/*background colour: #EEEEEE*/
+
+
+
+* {
+	font-family: Helvetica, Arial, sans-serif;
+	/*background-color: rgba(238, 238, 238, 0.5);*/
+}
+
+body {
+	background-image: url(seabirds-home-bg.png);
+	background-attachment: fixed;
+	background-position: bottom;
+	/*background-color: rgba(0, 127, 178, 0.5);*/
+}
+
+h1 {
+	color: #007FB2;
+	font-size: 200%;
+	/*font-family: 'Roboto Slab', serif;*/
+}
+
+p {
+	color: rgb(53, 158, 35);
+	line-height: 20px
+}
+
+li {
+	list-style: none;
+	display: inline-block;
+	color: rgb(28, 109, 48);
+}
+
+li:hover {
+	border: 1px solid black;
+	text-decoration: underline;
+	text-transform: uppercase;
+}
+
+img {
+	float: left;
+}
+
+footer {
+	clear: both;
+	text-align: center;
+}
+
+.webtext {
+	/*border: 5px solid rgba(28, 109, 48, 0.5);*/
+	background: rgba(255, 255, 255, 0.8)
+}
+
+.active {
+	color: rgb(28, 109, 48);
+	font-style: italic;
+}
+
+.footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  font-style: italic;
+  font-size: 80%;
+}
+
+/*#div1 {
+	background: rgba(255, 255, 255, 0.8);
+}
+
+#div2 {
+	background: rgba(255, 255, 255, 0.8);
+}*/
+
+
