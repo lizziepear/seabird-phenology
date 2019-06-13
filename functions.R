@@ -8,7 +8,8 @@
 ######## SECTION 1 - mini phenology table #####################################
 ###############################################################################
 
-#### 1.0 Helper function 1: convert laydate input to julian day ----
+
+#### 1.1 Helper function 1: convert laydate input to julian day ----
 ddmm2Julian <- function(string){
   
   ## TODO: Add in a stopifnot()
@@ -25,10 +26,10 @@ ddmm2Julian <- function(string){
   new.date.julian
 }
 
-#### 1.0 Helper function 2: convert julian day to a pretty data display format ----
+#### 1.2 Helper function 2: convert julian day to a pretty data display format ----
 ddmm2Display <- function(julian){
   ## turn julian day into e.g. "Jan-01"
-
+  
   date.full <- as.Date(julian, origin = "2000-12-31")
   
   date.new <- format(date.full, "%d-%b")
@@ -37,37 +38,86 @@ ddmm2Display <- function(julian){
 }
 
 
-#### 1.1 Main function: create summary phenology table ----
+#### 1.3 Main function: create summary phenology table ----
 phenTable1 <- function(laydate_string, prelay_length_days, inc_length_days, brood_length_days, post_length_days){ ## TODO: add in , sp_type
+  
+  ## TESTING WITH PARAMS
+  # laydate_string <- "29-07"
+  # prelay_length_days <- 10
+  # inc_length_days <- 70
+  # brood_length_days <- 60
+  # post_length_days <- 40
   
   ## laydate is a character string of format "mm-dd" - convert to number
   laydate <- ddmm2Julian(laydate_string)
   
-  ## sp_type is either "annual" or "biennial" and this affects the 'total non-breeding' row of the table
+  ## FIND START DATE OF WHOLE BREEDING CYCLE = pre-laying start date
+  start_date_julian <- laydate - prelay_length_days
   
-  output <- data.frame(matrix(ncol=3, nrow=6))
-  colnames(output) <- c("stage", "start", "length")
-  output[ ,1] <- c("pre-laying", "incubation", "brood-guard", "post-brood", "End breeding", "Non-breeding")
-  output[1,2] <- ddmm2Display(laydate - prelay_length_days)
-  output[1,3] <- prelay_length_days
-  output[2,2] <- ddmm2Display(laydate)
-  output[2,3] <- inc_length_days
-  output[3,2] <- ddmm2Display(laydate + inc_length_days)
-  output[3,3] <- brood_length_days
-  output[4,2] <- ddmm2Display(laydate + inc_length_days + brood_length_days)
-  output[4,3] <- post_length_days
-  output[5,2] <- ddmm2Display(laydate + inc_length_days + brood_length_days + post_length_days)
-  output[5,3] <- sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)
-  output[6,2] <- ddmm2Display(laydate + inc_length_days + brood_length_days + post_length_days)
-  output[6,3] <- 365 - sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)
+  df <- data.frame(matrix(ncol=10, nrow=5))
+  colnames(df) <- c("stage", "length", "start_jul_1", "end_jul_1", "start_jul_real", "end_jul_real", "start_date", "end_date", "start_display", "end_display")
+  df[ ,1] <- c("pre-laying", "incubation", "brood-guard", "post-brood", "non-breeding")
+  df
   
-  output$length <- as.integer(output$length)
+  ## fill in the length values
+  df[1,2] <- prelay_length_days
+  df[2,2] <- inc_length_days
+  df[3,2] <- brood_length_days
+  df[4,2] <- post_length_days
+  df[5,2] <- 365 - sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)
+  df
+  
+  ## fill in the table of START julian values from 1
+  df[1,3] <- 1
+  for (k in 1:4){
+    df[k+1,3] <- df[k,3] + df[k,2]
+  }
+  df
+  
+  ## fill in the table of END julian values
+  df[1,4] <- df[1,2]
+  for (m in 1:4){
+    df[m+1,4] <- df[m,4] + df[m+1,2]
+  }
+  df
+  
+  ## fill in the table of real julian values - just add (start_date_julian -1) to each start_jul_1 value.
+  df$start_jul_real <- df$start_jul_1 + start_date_julian - 1
+  df
+  df$end_jul_real <- df$end_jul_1 + start_date_julian - 1
+  df
+  
+  #### Part 2 - convert Julian dates to real dates over 2001 to 2002 by adding julian number to "2000-12-31"
+  df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + df$start_jul_real
+  df$end_date <- as.Date("2000-12-31", format="%Y-%m-%d") + df$end_jul_real
+  
+  #### Part 3 - make pretty versions for start and end date for displaying in the table
+  df$start_display <- as.character(format(df$start_date, "%d-%b"))
+  df$end_display <- as.character(format(df$end_date, "%d-%b"))
+  
+  df
+}
+
+## test
+# table <- phenTable1("10-01", 0, 70, 60, 40)
+# table
+
+#### 1.4 Helper function: prettify the phenTable1 output for display ----
+
+prettyPhenTable1 <- function(table){
+  output <- data.frame(matrix(ncol=4, nrow=5))
+  colnames(output) <- c("stage", "start", "length", "end")
+  output$stage <- table$stage
+  output$start <- table$start_display
+  output$length <- as.integer(table$length)
+  output$end <- table$end_display
   output
 }
 
 ## test
-table <- phenTable1("01-01", 0, 10, 20, 30)
-table
+# prettyPhenTable1(table)
+
+
 
 ###############################################################################
 ######## SECTION 2 - large phenology table ####################################
@@ -88,16 +138,33 @@ interval2Months <- function(input) {
   stopifnot(class(input) == "Interval") ## check the input is actually an interval!
   
   months <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-  ints <- c(interval("2000-12-31", "2001-01-31"), interval("2001-01-31", "2001-02-28"),
+  
+  ints2001 <- c(interval("2000-12-31", "2001-01-31"), interval("2001-01-31", "2001-02-28"),
             interval("2001-02-28", "2001-03-31"), interval("2001-03-31", "2001-04-30"),
             interval("2001-04-30", "2001-05-31"), interval("2001-05-31", "2001-06-30"),
             interval("2001-06-30", "2001-07-31"), interval("2001-07-31", "2001-08-31"),
             interval("2001-08-31", "2001-09-30"), interval("2001-09-30", "2001-10-31"),
             interval("2001-10-31", "2001-11-30"), interval("2001-11-30", "2001-12-31"))
+  
+  ints2002 <- c(interval("2001-12-31", "2002-01-31"), interval("2002-01-31", "2002-02-28"),
+                interval("2002-02-28", "2002-03-31"), interval("2002-03-31", "2002-04-30"),
+                interval("2002-04-30", "2002-05-31"), interval("2002-05-31", "2002-06-30"),
+                interval("2002-06-30", "2002-07-31"), interval("2002-07-31", "2002-08-31"),
+                interval("2002-08-31", "2002-09-30"), interval("2002-09-30", "2002-10-31"),
+                interval("2002-10-31", "2002-11-30"), interval("2002-11-30", "2002-12-31"))
+  
+  ovls2001 <- vector(mode="numeric", length=12)
+  ovls2002 <- vector(mode="numeric", length=12)
   ovls <- vector(mode="numeric", length=12)
   
-  ovls <- sapply(ints, intersectDays, int2=input)
-  # reslist <- list(months, ints, ovls) ## outpu the entire list
+  ovls2001 <- replace(sapply(ints2001, intersectDays, int2=input), is.na(sapply(ints2001, intersectDays, int2=input)), 0)
+  ovls2001
+  ovls2002 <- replace(sapply(ints2002, intersectDays, int2=input), is.na(sapply(ints2002, intersectDays, int2=input)), 0)
+  ovls2002
+  
+  ovls[1:12] <- ovls2001[1:12] + ovls2002[1:12]
+  
+  # reslist <- list(months, ints, ovls) ## output the entire list
   ovls ## output just the numeric vector of overlaps
 }
 
@@ -161,10 +228,11 @@ createEquation <- function(vec){
 phenTableBeta <- function(table){
   
   ## Define the intervals for each breed stage based on phenTable1 ----
-  prl_interval <- interval(as.Date(paste0(table[1,2], "-2001"), format="%d-%b-%Y")-1, as.Date(paste0(table[2,2], "-2001"), format="%d-%b-%Y")-1)
-  inc_interval <- interval(as.Date(paste0(table[2,2], "-2001"), format="%d-%b-%Y")-1, as.Date(paste0(table[3,2], "-2001"), format="%d-%b-%Y")-1)
-  brg_interval <- interval(as.Date(paste0(table[3,2], "-2001"), format="%d-%b-%Y")-1, as.Date(paste0(table[4,2], "-2001"), format="%d-%b-%Y")-1)
-  psb_interval <- interval(as.Date(paste0(table[4,2], "-2001"), format="%d-%b-%Y")-1, as.Date(paste0(table[5,2], "-2001"), format="%d-%b-%Y")-1)
+  prl_interval <- interval(table[1,7]-1, table[1,8])
+  inc_interval <- interval(table[2,7]-1, table[2,8])
+  brg_interval <- interval(table[3,7]-1, table[3,8])
+  psb_interval <- interval(table[4,7]-1, table[4,8])
+  nbr_interval <- interval(table[5,7]-1, table[5,8])
   ## TODO: add in nbr_interval
   
   ### TESTING THE HELPER FUNCTIONS:
@@ -192,10 +260,11 @@ phenTableBeta <- function(table){
   df[ ,1] <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
   df[ ,2] <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
   
-  df$pre_laying <- as.integer(replace(interval2Months(prl_interval), is.na(interval2Months(prl_interval)), 0))
+  df$pre_laying <- as.integer(replace(interval2Months(prl_interval), is.na(interval2Months(prl_interval)), 0)) ## replacing any NAs with 0s
   df$incubation <- as.integer(replace(interval2Months(inc_interval), is.na(interval2Months(inc_interval)), 0))
   df$brood_guard <- as.integer(replace(interval2Months(brg_interval), is.na(interval2Months(brg_interval)), 0))
   df$post_brood <- as.integer(replace(interval2Months(psb_interval), is.na(interval2Months(psb_interval)), 0))
+  df$non_breeding <- as.integer(replace(interval2Months(nbr_interval), is.na(interval2Months(nbr_interval)), 0))
   
   df
   ## replace NA with 0
@@ -218,6 +287,9 @@ phenTableBeta <- function(table){
   }
   df$equation_to_combine_distributions <- eqs
   
+  #### REORDER TABLE to start with the month in which pre-laying starts ----
+  
+  
   ## output result
   df
 }
@@ -226,9 +298,14 @@ phenTableBeta <- function(table){
 # table
 # phenTableBeta(table)
 
-## TODO: potential problem: if inc starts in Dec and brood starts in Jan need to find a way to 
-## make sure the date is read in as the FOLLOWING January.
-
-
-
-
+### TESTING FUNCTIONS ----
+## phenology table 1
+# table <- phenTable1("29-07", 10, 70, 60, 40)
+# table
+# prettyPhenTable1(table)
+# 
+# ## phenologytable beta
+# phenTableBeta(table)
+# 
+# interval2Months(prl_interval)
+# input <- prl_interval

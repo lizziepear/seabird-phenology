@@ -10,7 +10,7 @@ library(shiny)
 library(lubridate)
 
 ## set working directory
-setwd("C:\\Users\\eliza\\OneDrive\\Documents\\BirdLife\\Ana_bycatch\\App_v2")
+setwd("C:\\Users\\eliza\\OneDrive\\Documents\\BirdLife\\Ana_bycatch\\App_v3")
 
 # rm(list=ls())
 
@@ -61,7 +61,11 @@ ui <- navbarPage("Seabird phenology", selected = "Introduction",
       # Input: numeric input for length of brood-guard
       numericInput(inputId = "brood_length_days", label = "Insert mean brood-guard length in days", value = 25),
       # Input: numeric input for length of post-brood
-      numericInput(inputId = "post_length_days", label = "Insert mean post-guard length in days", value = 25)
+      numericInput(inputId = "post_length_days", label = "Insert mean post-guard length in days", value = 25),
+      
+      ## Action button to trigger calculation
+      p("To calculate monthly phenology weightings, click the button below"),
+      actionButton("go", "Go")
       ),
     
     # Main panel for displaying outputs ----
@@ -81,10 +85,10 @@ ui <- navbarPage("Seabird phenology", selected = "Introduction",
   tabPanel("Demography model",     
     sidebarLayout(
       sidebarPanel(
-        h2("Input demography parameters will go here.")
+        p("Input demography parameters will go here.")
       ),
       mainPanel(
-        h2("Output from demography model will go here - both numbers of birds and figure 1 showing population stratification")
+        p("Output from demography model will go here - both numbers of birds and figure 1 showing population stratification")
       )
     )
   )  
@@ -99,14 +103,19 @@ server <- function(input, output) {
                input$brood_length_days, input$post_length_days)
   })
   
+  ## Make the pretty version of phenTable1 ----
+  makePrettyPhenTable1 <- reactive({
+    prettyPhenTable1(makePhenTable1())
+  })
+  
   ## Make the second phenTableBeta table ----
-  makePhenTableBeta <- reactive({
-    phenTableBeta(makePhenTable1()) ## need to make this a function??
+  makePhenTableBeta <- eventReactive(input$go, {
+    phenTableBeta(makePhenTable1())
   })
   
   ## Render the first phenTable1 table ----
   output$phenTab1 <- renderTable({
-    makePhenTable1()
+    makePrettyPhenTable1()
   })
   
   ## Render the second phenTableBeta table ----
