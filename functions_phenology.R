@@ -225,7 +225,7 @@ createEquation <- function(vec){
 # table <- phenTable1("01-01", 0, 35, 5, 45)
 # table
 
-phenTableBeta <- function(table){
+phenTableBeta <- function(table, updateProgress=NULL){
   
   ## Define the intervals for each breed stage based on phenTable1 ----
   prl_interval <- interval(table[1,7]-1, table[1,8])
@@ -233,7 +233,12 @@ phenTableBeta <- function(table){
   brg_interval <- interval(table[3,7]-1, table[3,8])
   psb_interval <- interval(table[4,7]-1, table[4,8])
   nbr_interval <- interval(table[5,7]-1, table[5,8])
-  ## TODO: add in nbr_interval
+
+  
+  if (is.function(updateProgress)) {
+    text <- "part 1"
+    updateProgress(detail = text)
+  }
   
   ### TESTING THE HELPER FUNCTIONS:
   
@@ -260,16 +265,45 @@ phenTableBeta <- function(table){
   df[ ,1] <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
   df[ ,2] <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
   
+  if (is.function(updateProgress)) {
+    text <- "pre-laying"
+    updateProgress(detail = text)
+  }
   df$pre_laying <- as.integer(replace(interval2Months(prl_interval), is.na(interval2Months(prl_interval)), 0)) ## replacing any NAs with 0s
+  
+  if (is.function(updateProgress)) {
+    text <- "incubation"
+    updateProgress(detail = text)
+  }
   df$incubation <- as.integer(replace(interval2Months(inc_interval), is.na(interval2Months(inc_interval)), 0))
+  
+  if (is.function(updateProgress)) {
+    text <- "brood-guard"
+    updateProgress(detail = text)
+  }
   df$brood_guard <- as.integer(replace(interval2Months(brg_interval), is.na(interval2Months(brg_interval)), 0))
+  
+  if (is.function(updateProgress)) {
+    text <- "post-brood"
+    updateProgress(detail = text)
+  }
   df$post_brood <- as.integer(replace(interval2Months(psb_interval), is.na(interval2Months(psb_interval)), 0))
+  
+  if (is.function(updateProgress)) {
+    text <- "non-breeding"
+    updateProgress(detail = text)
+  }
   df$non_breeding <- as.integer(replace(interval2Months(nbr_interval), is.na(interval2Months(nbr_interval)), 0))
   
   df
   ## replace NA with 0
   df[is.na(df)] <- 0
   df
+  
+  if (is.function(updateProgress)) {
+    text <- "part 3"
+    updateProgress(detail = text)
+  }
   
   ### Add in equation column for how to combine distributions per month ----
   all_list <- list(as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)), 
@@ -278,6 +312,12 @@ phenTableBeta <- function(table){
   all_list
   length(all_list[[6]])
   all_list[1]
+  
+  
+  if (is.function(updateProgress)) {
+    text <- "part 4"
+    updateProgress(detail = text)
+  }
   
   eqs <- vector(mode="character", length=12)
   for (i in 1:12){
@@ -289,6 +329,10 @@ phenTableBeta <- function(table){
   
   #### REORDER TABLE to start with the month in which pre-laying starts ----
   
+  if (is.function(updateProgress)) {
+    text <- "Done!"
+    updateProgress(detail = text)
+  }
   
   ## output result
   df
