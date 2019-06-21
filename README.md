@@ -1,4 +1,4 @@
-h2(Seabird phenology)
+## Seabird phenology
 
 R Shiny app to create monthly phenology tables for each pool of birds in a population, and create equations to combine distribution rasters for each breeding stage with the correct weightings to produce an average monthly distribution raster for each group.
 
