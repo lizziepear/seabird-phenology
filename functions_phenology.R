@@ -346,7 +346,7 @@ createEquation <- function(vec){
 # table <- phenTable1("01-01", 0, 35, 5, 45)
 # table
 
-phenTableBeta <- function(table, updateProgress=NULL){
+phenTableBreed <- function(table, updateProgress=NULL){
   
   ## Define the intervals for each breed stage based on phenTable1 ----
   prl_interval <- interval(table[1,7]-1, table[1,8])

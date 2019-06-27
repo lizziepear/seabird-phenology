@@ -86,49 +86,59 @@ ui <- navbarPage("Seabird phenology", selected = "Introduction",
       
       # Main panel for displaying outputs ----
       mainPanel(#"Average phenology timings",
-          h2("Average phenology timings for successful breeders:"),
-          tableOutput("phenTab1Succ"),
-          tags$br(),
-          h3("Average fail date for breeders"),
-          p("(= halfway through breeding season from start of incubation to end of post-brood):"),
-          textOutput("failDate"),
-          tags$br(),
-          h2("Average phenology timings for fail breeders:"),
-          tags$br(),
-          tableOutput("phenTab1Fail"),
-          tags$br(),
-          h2("Monthly average phenology for successful breeders:"),
-          tableOutput("phenTabBeta"),
-          tags$br(),
-          h2("Monthly average phenology for fail breeders:"),
-          tableOutput("phenTabGamma"),
-          tags$br(), tags$br()
-        # tabsetPanel(
-        #   tabPanel("Successful breeders",
-        #            h2("Monthly average phenology for adult successful breeders (group beta):"),
-        #            tableOutput("phenTabBeta")
-        #   ),
-        #   tabPanel("Fail breeders",
-        #            h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
-        #            h2("Monthly average phenology for adult fail breeders (group gamma):")#,
-        #            # tableOutput("phenTabDelta")
-        #   ),
-        #   tabPanel("Non-breeders",
-        #            h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
-        #            h2("Monthly average phenology for adult non-breeders (sabbaticals) (group gamma):")#,
-        #            # tableOutput("phenTabGamma")
-        #   ),
-        #   tabPanel("Juveniles",
-        #            h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
-        #            h2("Monthly average phenology for juveniles (group zeta):")#,
-        #            # tableOutput("phenTabTheta")
-        #   ),
-        #   tabPanel("Immatures",
-        #            h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
-        #            h2("Monthly average phenology for immatures (group theta):")#,
-        #            # tableOutput("phenTabTheta")
-        #   )
-        # ) ## end tabsetPanel()
+        
+          # h2("Average phenology timings for successful breeders:"),
+          # tableOutput("phenTab1Succ"),
+          # tags$br(),
+          # h3("Average fail date for breeders"),
+          # p("(= halfway through breeding season from start of incubation to end of post-brood):"),
+          # textOutput("failDate"),
+          # tags$br(),
+          # h2("Average phenology timings for fail breeders:"),
+          # tags$br(),
+          # tableOutput("phenTab1Fail"),
+          # tags$br(),
+          # h2("Monthly average phenology for successful breeders:"),
+          # tableOutput("phenTabBeta"),
+          # tags$br(),
+          # h2("Monthly average phenology for fail breeders:"),
+          # tableOutput("phenTabGamma"),
+          # tags$br(), tags$br()
+          
+        tabsetPanel(selected= "Fail breeders", ## TODO: change this to use an input to determine which of the current tabs is active - input$id in server logic.
+          tabPanel("Successful breeders",
+                   h2("Average phenology timings for successful breeders:"),
+                   tableOutput("phenTab1Succ"),
+                   tags$br(),
+                   h2("Monthly average phenology for adult successful breeders (group beta):"),
+                   tableOutput("phenTabBeta")
+          ),
+          tabPanel("Fail breeders",
+                   h2("Average phenology timings for fail breeders:"), 
+                   tableOutput("phenTab1Fail"),
+                   h3("Average fail date for breeders"),
+                   p("(= halfway through breeding season from start of incubation to end of post-brood):"),
+                   textOutput("failDate"),
+                   tags$br(),
+                   h2("Monthly average phenology for adult fail breeders (group gamma):"),
+                   tableOutput("phenTabGamma")
+          ),
+          tabPanel("Non-breeders",
+                   # h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
+                   h2("Monthly average phenology for adult non-breeders (sabbaticals) (group delta):")#,
+                   # tableOutput("phenTabGamma")
+          ),
+          tabPanel("Juveniles",
+                   # h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
+                   h2("Monthly average phenology for juveniles (group zeta):")#,
+                   # tableOutput("phenTabTheta")
+          ),
+          tabPanel("Immatures",
+                   # h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
+                   h2("Monthly average phenology for immatures (group theta):")#,
+                   # tableOutput("phenTabTheta")
+          )
+        ) ## end tabsetPanel()
       ) ## end mainPanel()
     ) ## end sidebarLayout()
   ), ## end tabPanel("Phenology")
@@ -156,7 +166,7 @@ ui <- navbarPage("Seabird phenology", selected = "Introduction",
                    actionButton("go", "Go")
       ),
       mainPanel(
-        p("Output from demography model will go here - a) table showing population stratification in proportions; b) figure 1 showing populatino breakdown as bar chart (or maybe pie chart?); c) numbers of birds in each stratum of the population"),
+        p("Output from demography model will go here - a) table showing population stratification in proportions; b) figure 1 showing population breakdown as bar chart (or maybe pie chart?); c) numbers of birds in each stratum of the population"),
         h2("Estimated stable stage distribution of your population:"),
         tableOutput("demTab1")
       )
@@ -174,34 +184,17 @@ server <- function(input, output) {
   #### Make tables for SUCCESSFUL BREEDERS ----
   ## Make the first phenTable1 table
   makePhenTable1Succ <- reactive({
-    phenTable1Succ(input$laydate_string, input$prelay_length_days, input$inc_length_days, 
-               input$brood_length_days, input$post_length_days)
+    req(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days)
+    phenTable1Succ(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days)
   })
   ## Make the pretty version of phenTable1
   makePrettyPhenTable1Succ <- reactive({
     prettyPhenTable1(makePhenTable1Succ())
   })
-  
-  #### Make output showing fail date as a text output ----
-  makeFailDate <- reactive({
-    findFailDate(makePhenTable1Succ())
+  ## Render the first phenTable1 table for SUCC ----
+  output$phenTab1Succ <- renderTable({
+    makePrettyPhenTable1Succ()
   })
-  ## Render it:
-  output$failDate <- renderText({
-    makeFailDate()
-  })
-  
-  #### Make tables for FAIL BREEDERS ----
-  ## Make the first phenTable1 table
-  makePhenTable1Fail <- reactive({
-    phenTable1Fail(input$laydate_string, input$prelay_length_days, input$inc_length_days, 
-                   input$brood_length_days, input$post_length_days)
-  })
-  ## Make the pretty version of phenTable1
-  makePrettyPhenTable1Fail <- reactive({
-    prettyPhenTable1(makePhenTable1Fail())
-  })
-  
   ## Make the monthly table for SUCC - phenTableBeta table ----
   makePhenTableBeta <- eventReactive(input$goSB, {
     
@@ -219,10 +212,38 @@ server <- function(input, output) {
       progress$set(value = value, detail = detail)
     }
     
-    phenTableBeta(makePhenTable1Succ(), updateProgress)
+    phenTableBreed(makePhenTable1Succ(), updateProgress)
+  })
+  ## Render the second phenTableBeta table FOR SUCC ----
+  output$phenTabBeta <- renderTable({
+    makePhenTableBeta()
   })
   
-  ## Make the monthly table for SUCC - phenTableBeta table ----
+  #### Make output showing fail date as a text output ----
+  makeFailDate <- reactive({
+    req(input$laydate_string, input$inc_length_days, input$brood_length_days, input$post_length_days)
+    findFailDate(makePhenTable1Succ())
+  })
+  ## Render Fail Date as text:
+  output$failDate <- renderText({
+    makeFailDate()
+  })
+  
+  #### Make tables for FAIL BREEDERS ----
+  ## Make the first phenTable1 table
+  makePhenTable1Fail <- reactive({
+    req(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days)
+    phenTable1Fail(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days)
+  })
+  ## Make the pretty version of phenTable1
+  makePrettyPhenTable1Fail <- reactive({
+    prettyPhenTable1(makePhenTable1Fail())
+  })
+  ## Render the first phenTable1 table for FAIL ----
+  output$phenTab1Fail <- renderTable({
+    makePrettyPhenTable1Fail()
+  })
+  ## Make the monthly table for FAIL - phenTableGamma table ----
   makePhenTableGamma <- eventReactive(input$goFB, {
     
     ## create a progress object
@@ -239,35 +260,22 @@ server <- function(input, output) {
       progress$set(value = value, detail = detail)
     }
     
-    phenTableBeta(makePhenTable1Fail(), updateProgress)
-  })
-  
-  ## Render the first phenTable1 table for SUCC ----
-  output$phenTab1Succ <- renderTable({
-    makePrettyPhenTable1Succ()
-  })
-  ## Render the first phenTable1 table for FAIL ----
-  output$phenTab1Fail <- renderTable({
-    makePrettyPhenTable1Fail()
-  })
-  
-  ## Render the second phenTableBeta table FOR SUCC ----
-  output$phenTabBeta <- renderTable({
-    makePhenTableBeta()
+    phenTableBreed(makePhenTable1Fail(), updateProgress)
   })
   ## Render the second phenTableBeta table FOR FAIL ----
   output$phenTabGamma <- renderTable({
     makePhenTableGamma()
   })
   
+  
   ########################################################################################
   ################### TAB 2 - DEMOGRAPHY MODEL ###########################################
   ########################################################################################
   
-  ## Make the overall demography table ----
-  makeDemTable1 <- reactive({
-    popStrat(input$afb, input$Sa, input$Sj, input$BS, input$BF)
-  })
+  # ## Make the overall demography table ----
+  # makeDemTable1 <- reactive({
+  #   popStrat(input$afb, input$Sa, input$Sj, input$BS, input$BF)
+  # })
   
   ########################################################################################
   ######### change output options
