@@ -14,7 +14,8 @@ library(lubridate)
 
 ## set working directory
 # setwd("C:\\Users\\eliza\\OneDrive\\Documents\\PROJECTS\\seabird-phenology")
-setwd("C:/Users/Lizzie/OneDrive/Documents/PROJECTS/seabird-phenology")
+# setwd("C:/Users/Lizzie/OneDrive/Documents/PROJECTS/seabird-phenology")
+setwd("C:/Users/Lizzie/OneDrive/Documents/PROJECTS/seabird-phenology-test")
 
 # rm(list=ls())
 
@@ -26,11 +27,16 @@ source("functions_demography.R")
 ui <- navbarPage("Seabird phenology", selected = "Introduction",
   
   ## Link stylesheet and other HTML tags we need ----
+  # HTML("
+  #      <head>
+  #      <link rel='stylesheet' type='text/css' href='style.css'>
+  #      <div class='footer'> <p>Disclaimer: this app is not finished</p> </div>
+  #      </head>"),
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
-    # tags$link(href="https://fonts.googleapis.com/css?family=Roboto+Slab&display=swap", rel="stylesheet")
     tags$div(class = "footer", "Disclaimer: this app is not finished")
   ),
+  
 
   
   ########################################################################################
@@ -283,16 +289,16 @@ server <- function(input, output) {
   makePhenTableTheta <- eventReactive(input$goAll, {
     phenTableTheta()
   })
-  ## render the table for SABBS
+  ## render the table for IMM
   output$phenTabTheta <- renderTable({
     makePhenTableTheta()
   })
   #### Adult non-breeders, immatures, and juveniles ----
-  ## make the full monthly table for SABBS
+  ## make the full monthly table for JUV
   makePhenTableZeta <- eventReactive(input$goAll, {
     phenTableZeta()
   })
-  ## render the table for SABBS
+  ## render the table for JUV
   output$phenTabZeta <- renderTable({
     makePhenTableZeta()
   })
