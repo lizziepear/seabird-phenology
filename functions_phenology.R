@@ -298,6 +298,34 @@ prettyPhenTable1 <- function(table){
 # table
 # prettyPhenTable1(table)
 
+#### 1.7 Main funciton: plot the breeding cyle to show graphically ----
+plotCycle <- function(table, species_type) {
+  
+  mycols <- c("#ffd900", "#ffa53f", "#ff727f", "#c772f1", "#0084ff")
+  
+  if(species_type == "annual"){
+    m <- matrix(table$length)
+    xmax <- 365
+    
+  } else if(species_type == "biennial"){
+    lens <- table$length
+    lens[5] <- lens[5]+lens[6]
+    m <- matrix(lens[1:5])
+    
+    xmax <- 730
+  }
+  
+  par(mar = c(5,2,1,2))
+  barplot(m, horiz=T,
+          xlim=c(0, xmax), ylim=c(0,2), width=0.5,
+          xlab = paste0("days from ", table$start_display[1]), col = mycols)
+  text(as.numeric(cumsum(m)-m/2), 0.6, 
+       labels=as.character(m),
+       pos = 3, xpd=TRUE)
+  legend(x="topleft", fill=mycols, legend=c("pre-laying","incubation","brood-guard","post-guard","non-breeding"))
+}
+
+
 ###############################################################################
 ######## SECTION 2 - large phenology tables ###################################
 ###############################################################################

@@ -1,0 +1,36 @@
+/*light blue: #007FB2  (0, 127, 178)*/
+/*darker blue: #06516D  rgb(6, 81, 109) */
+/*green: #4BAF51 (75, 175, 81)*/
+/*background colour: #EEEEEE*/
+
+.content-wrapper {
+	padding: 10px;
+  	padding-left: 10px;
+  	padding-right: 10px;
+  	margin-bottom: 115px;
+  	clear: both;
+}
+
+.main-header .logo {
+  /*font-family: museo, Helvetica, Arial, sans-serif;*/
+  font-family: 'Bree Serif', Helvetica, serif;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.sidebar-menu li { 
+	/*margin-bottom: 2px;*/
+}
+
+
+.footer {
+	position: fixed;
+	bottom: 0;
+	/*right: 0;*/
+	left: 0;
+	padding: 10px;
+	box-sizing: border-box;
+	padding-top: 40px;
+	margin-top: 40px;
+	clear: both;
+}
