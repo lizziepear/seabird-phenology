@@ -13,8 +13,8 @@ library(shiny)
 library(lubridate)
 
 ## set working directory
-setwd("C:\\Users\\eliza\\OneDrive\\Documents\\PROJECTS\\seabird-phenology")
-# setwd("C:\\Users\\Lizzie\\OneDrive\\Documents\\PROJECTS\\seabird-phenology")
+# setwd("C:\\Users\\eliza\\OneDrive\\Documents\\PROJECTS\\seabird-phenology")
+setwd("C:/Users/Lizzie/OneDrive/Documents/PROJECTS/seabird-phenology")
 
 # rm(list=ls())
 
@@ -27,11 +27,11 @@ ui <- navbarPage("Seabird phenology", selected = "Introduction",
   
   ## Link stylesheet and other HTML tags we need ----
   tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "style.css")#,
+    tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
     # tags$link(href="https://fonts.googleapis.com/css?family=Roboto+Slab&display=swap", rel="stylesheet")
-    # tags$div(class = "footer", "Disclaimer: this app is not finished")
+    tags$div(class = "footer", "Disclaimer: this app is not finished")
   ),
-  
+
   
   ########################################################################################
   ################## TAB 0 - Introduction to the methods ---- ############################
@@ -40,12 +40,24 @@ ui <- navbarPage("Seabird phenology", selected = "Introduction",
     titlePanel(h1("Introduction to the seabird density maps method")),
     sidebarLayout(
       sidebarPanel(
-      ),
-      mainPanel(
-        h3("Mapping the global distribution of seabird populations: a framework for integrating biologging, demographic and phenological datasets."),
         tags$div("Steps:", tags$br(), tags$ol(tags$li("1. Download data from the", tags$a(href="www.seabirdtracking.org", "Seabird Tracking Database")),
                 tags$li("2. Create one csv file per species"), tags$li("3. etc."))
         )
+      ),
+      mainPanel(
+        h3("Mapping the global distribution of seabird populations: a framework for integrating biologging, demographic and phenological datasets."),
+        HTML("
+             <img src='flowchart_v2.png' alt='method framework' height='600' width='800'>
+             <br>
+             <p>References here</p>
+             <ul>
+             <li>[a] Lascelles et al. (2016)</li>
+             <li>[b] Oppel et al. (2018)</li>
+             </ul>
+             ")
+        # tags$img(src="flowchart_v2.png", alt="method framework", height=600, width=800, border=10),
+        # tags$br(),
+        # p("References: \n [a] Lascelles et al. (2016) \n [b] Oppel et al. (2018)")
       )
     )
   ),
@@ -60,7 +72,7 @@ ui <- navbarPage("Seabird phenology", selected = "Introduction",
       ## Sidebar panel for inputs ----
       sidebarPanel(tags$p("This tab uses mean laying date and mean lengths of the incubation, brood-guard and post-brood stages to estimate average start dates of each section of the breeding cycle."), tags$br(),    
                    ## Input: Selector for choosing species type (this does nothing yet) ----
-                   # selectInput(inputId = "species_type", label = "Choose whether your species is annual or biennial", choices = c("annual", "biennial")),
+                   selectInput(inputId = "species_type", label = "Choose whether your species is annual or biennial", choices = c("annual", "biennial"), selected="annual"),
                    ## Input mean length of pre-laying
                    numericInput(inputId = "prelay_length_days", label = "Insert mean pre-laying length in days", value = 0),
                    ## Input mean laying date as day-month
@@ -80,32 +92,17 @@ ui <- navbarPage("Seabird phenology", selected = "Introduction",
                    tags$br(),
                    p("Fail breeders:"),
                    # p("Adult sucessful breeders:") ## TODO: add options to calculate and display the timings for each pool of birds - as tabset isn't working.
-                   actionButton("goFB", "Go")
+                   actionButton("goFB", "Go"),
+                   tags$br(),
+                   p("Adult sabbaticals, immatures and juveniles:"),
+                   actionButton("goAll", "Go")
                    
       ),
       
       # Main panel for displaying outputs ----
       mainPanel(#"Average phenology timings",
-        
-          # h2("Average phenology timings for successful breeders:"),
-          # tableOutput("phenTab1Succ"),
-          # tags$br(),
-          # h3("Average fail date for breeders"),
-          # p("(= halfway through breeding season from start of incubation to end of post-brood):"),
-          # textOutput("failDate"),
-          # tags$br(),
-          # h2("Average phenology timings for fail breeders:"),
-          # tags$br(),
-          # tableOutput("phenTab1Fail"),
-          # tags$br(),
-          # h2("Monthly average phenology for successful breeders:"),
-          # tableOutput("phenTabBeta"),
-          # tags$br(),
-          # h2("Monthly average phenology for fail breeders:"),
-          # tableOutput("phenTabGamma"),
-          # tags$br(), tags$br()
           
-        tabsetPanel(selected= "Fail breeders", ## TODO: change this to use an input to determine which of the current tabs is active - input$id in server logic.
+        tabsetPanel(selected= "Successful breeders", ## TODO: change this to use an input to determine which of the current tabs is active - input$id in server logic.
           tabPanel("Successful breeders",
                    h2("Average phenology timings for successful breeders:"),
                    tableOutput("phenTab1Succ"),
@@ -125,18 +122,18 @@ ui <- navbarPage("Seabird phenology", selected = "Introduction",
           ),
           tabPanel("Non-breeders",
                    # h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
-                   h2("Monthly average phenology for adult non-breeders (sabbaticals) (group delta):")#,
-                   # tableOutput("phenTabGamma")
-          ),
-          tabPanel("Juveniles",
-                   # h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
-                   h2("Monthly average phenology for juveniles (group zeta):")#,
-                   # tableOutput("phenTabTheta")
+                   h2("Monthly average phenology for adult non-breeders (sabbaticals) (group delta):"),
+                   tableOutput("phenTabDelta")
           ),
           tabPanel("Immatures",
                    # h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
-                   h2("Monthly average phenology for immatures (group theta):")#,
-                   # tableOutput("phenTabTheta")
+                   h2("Monthly average phenology for immatures (group theta):"),
+                   tableOutput("phenTabTheta")
+          ),
+          tabPanel("Juveniles",
+                   # h2("Average phenology timings for your population:"), tableOutput("phenTab1"), tags$br(),
+                   h2("Monthly average phenology for juveniles (group zeta):"),
+                   tableOutput("phenTabZeta")
           )
         ) ## end tabsetPanel()
       ) ## end mainPanel()
@@ -184,8 +181,8 @@ server <- function(input, output) {
   #### Make tables for SUCCESSFUL BREEDERS ----
   ## Make the first phenTable1 table
   makePhenTable1Succ <- reactive({
-    req(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days)
-    phenTable1Succ(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days)
+    req(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days, input$species_type)
+    phenTable1Succ(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days, input$species_type)
   })
   ## Make the pretty version of phenTable1
   makePrettyPhenTable1Succ <- reactive({
@@ -195,7 +192,12 @@ server <- function(input, output) {
   output$phenTab1Succ <- renderTable({
     makePrettyPhenTable1Succ()
   })
+  ## Make phenTable1SuccANNUAL - for feeding into phenTableBreed function (breeding cycle cut to one year) ----
+  makePhenTable1SuccAnnual <- reactive({
+    phenTable1Succ(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days, "annual")
+  })
   ## Make the monthly table for SUCC - phenTableBeta table ----
+  ## TODO: Change this so that it uses the ANNUAL version of PhenTable1Succ ONLY - not the biennial version.
   makePhenTableBeta <- eventReactive(input$goSB, {
     
     ## create a progress object
@@ -212,7 +214,7 @@ server <- function(input, output) {
       progress$set(value = value, detail = detail)
     }
     
-    phenTableBreed(makePhenTable1Succ(), updateProgress)
+    phenTableBreed(makePhenTable1SuccAnnual(), updateProgress) ## changed to call makePhenTable1SuccANNUAL instead of the normal version
   })
   ## Render the second phenTableBeta table FOR SUCC ----
   output$phenTabBeta <- renderTable({
@@ -265,6 +267,34 @@ server <- function(input, output) {
   ## Render the second phenTableBeta table FOR FAIL ----
   output$phenTabGamma <- renderTable({
     makePhenTableGamma()
+  })
+  
+  #### Adult non-breeders, immatures, and juveniles ----
+  ## make the full monthly table for SABBS
+  makePhenTableDelta <- eventReactive(input$goAll, {
+    phenTableDelta()
+  })
+  ## render the table for SABBS
+  output$phenTabDelta <- renderTable({
+    makePhenTableDelta()
+  })
+  
+  ## make the full monthly table for IMM
+  makePhenTableTheta <- eventReactive(input$goAll, {
+    phenTableTheta()
+  })
+  ## render the table for SABBS
+  output$phenTabTheta <- renderTable({
+    makePhenTableTheta()
+  })
+  #### Adult non-breeders, immatures, and juveniles ----
+  ## make the full monthly table for SABBS
+  makePhenTableZeta <- eventReactive(input$goAll, {
+    phenTableZeta()
+  })
+  ## render the table for SABBS
+  output$phenTabZeta <- renderTable({
+    makePhenTableZeta()
   })
   
   

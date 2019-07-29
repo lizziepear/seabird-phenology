@@ -42,14 +42,15 @@ ddmm2Display <- function(julian){
 
 
 #### 1.3 Main function: create summary phenology table for SUCCESSFUL BREEDERS ----
-phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, brood_length_days, post_length_days){ ## TODO: add in , sp_type
+phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, brood_length_days, post_length_days, species_type){
   
   ## TESTING WITH PARAMS
-  # laydate_string <- "29-07"
-  # prelay_length_days <- 10
-  # inc_length_days <- 70
-  # brood_length_days <- 60
-  # post_length_days <- 40
+  # laydate_string <- "01-01" ## "29-07"
+  # prelay_length_days <- 26 ## 10
+  # inc_length_days <- 79 ## 70
+  # brood_length_days <- 31 ## 60
+  # post_length_days <- 240 ## 40
+  # species_type <- "annual"
   
   ## laydate is a character string of format "mm-dd" - convert to number
   laydate <- ddmm2Julian(laydate_string)
@@ -57,46 +58,104 @@ phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, 
   ## FIND START DATE OF WHOLE BREEDING CYCLE = pre-laying start date
   start_date_julian <- laydate - prelay_length_days
   
-  df <- data.frame(matrix(ncol=10, nrow=5))
-  colnames(df) <- c("stage", "length", "start_jul_1", "end_jul_1", "start_jul_real", "end_jul_real", "start_date", "end_date", "start_display", "end_display")
-  df[ ,1] <- c("pre-laying", "incubation", "brood-guard", "post-brood", "non-breeding")
-  df
-  
-  ## fill in the length values
-  df[1,2] <- prelay_length_days
-  df[2,2] <- inc_length_days
-  df[3,2] <- brood_length_days
-  df[4,2] <- post_length_days
-  df[5,2] <- 365 - sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)
-  df
-  
-  ## fill in the table of START julian values from 1
-  df[1,3] <- 1
-  for (k in 1:4){
-    df[k+1,3] <- df[k,3] + df[k,2]
+  if (species_type == "annual"){
+    
+    ## make full data frame for results
+    df <- data.frame(matrix(ncol=10, nrow=5))
+    colnames(df) <- c("stage", "length", "start_jul_1", "end_jul_1", "start_jul_real", "end_jul_real", "start_date", "end_date", "start_display", "end_display")
+    df[ ,1] <- c("pre-laying", "incubation", "brood-guard", "post-brood", "non-breeding")
+    df
+    
+    ## fill in the length values
+    df[1,2] <- prelay_length_days
+    df[2,2] <- inc_length_days
+    df[3,2] <- brood_length_days
+    if (sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days) > 365){ ## CHOP POST-GUARD IF BREEDING CYCLE > 365 DAYS
+      post_length_days <- post_length_days - (sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)-365)
+    }
+    df[4,2] <- post_length_days
+    df[5,2] <- 365 - sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)
+    df
+    
+    ## fill in the table of START julian values from 1
+    df[1,3] <- 1
+    for (k in 1:4){
+      df[k+1,3] <- df[k,3] + df[k,2]
+    }
+    df
+    
+    ## fill in the table of END julian values
+    df[1,4] <- df[1,2]
+    for (m in 1:4){
+      df[m+1,4] <- df[m,4] + df[m+1,2]
+    }
+    df
+    
+    ## fill in the table of real julian values - just add (start_date_julian -1) to each start_jul_1 value.
+    df$start_jul_real <- df$start_jul_1 + start_date_julian - 1
+    df
+    df$end_jul_real <- df$end_jul_1 + start_date_julian - 1
+    df
+    
+    #### Part 2 - convert Julian dates to real dates over 2001 to 2002 by adding julian number to "2000-12-31"
+    df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$start_jul_real)
+    df$end_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$end_jul_real)
+    
+    #### Part 3 - make pretty versions for start and end date for displaying in the table
+    df$start_display <- as.character(format(df$start_date, "%d-%b"))
+    df$end_display <- as.character(format(df$end_date, "%d-%b"))
+    
+  } else if (species_type == "biennial"){
+    
+    ## make full data frame for results, with extra row for non-breeding 2
+    df <- data.frame(matrix(ncol=10, nrow=6))
+    colnames(df) <- c("stage", "length", "start_jul_1", "end_jul_1", "start_jul_real", "end_jul_real", "start_date", "end_date", "start_display", "end_display")
+    df[ ,1] <- c("pre-laying", "incubation", "brood-guard", "post-brood", "non-breeding year 1", "non-breeding year 2")
+    df
+    
+    ## fill in the length values
+    df[1,2] <- prelay_length_days
+    df[2,2] <- inc_length_days
+    df[3,2] <- brood_length_days
+    df[4,2] <- post_length_days
+    if (sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days) > 365){
+      df[5,2] <- 0
+      df[6,2] <- 365 - (sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)-365)
+    } else if (sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days) <= 365){
+      df[5,2] <- 365 - sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)
+      df[6,2] <- 365
+    }
+    df
+    
+    ## fill in the table of START julian values from 1
+    df[1,3] <- 1
+    for (k in 1:5){ ## changed from (k in 1:4)
+      df[k+1,3] <- df[k,3] + df[k,2]
+    }
+    df
+    
+    ## fill in the table of END julian values
+    df[1,4] <- df[1,2]
+    for (m in 1:5){ ## changed from (m in 1:4)
+      df[m+1,4] <- df[m,4] + df[m+1,2]
+    }
+    df
+    
+    ## fill in the table of real julian values - just add (start_date_julian -1) to each start_jul_1 value.
+    df$start_jul_real <- df$start_jul_1 + start_date_julian - 1
+    df
+    df$end_jul_real <- df$end_jul_1 + start_date_julian - 1
+    df
+    
+    #### Part 2 - convert Julian dates to real dates over 2001 to 2002 by adding julian number to "2000-12-31"
+    df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$start_jul_real)
+    df$end_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$end_jul_real)
+    
+    #### Part 3 - make pretty versions for start and end date for displaying in the table
+    df$start_display <- as.character(format(df$start_date, "%d-%b"))
+    df$end_display <- as.character(format(df$end_date, "%d-%b"))
+    
   }
-  df
-  
-  ## fill in the table of END julian values
-  df[1,4] <- df[1,2]
-  for (m in 1:4){
-    df[m+1,4] <- df[m,4] + df[m+1,2]
-  }
-  df
-  
-  ## fill in the table of real julian values - just add (start_date_julian -1) to each start_jul_1 value.
-  df$start_jul_real <- df$start_jul_1 + start_date_julian - 1
-  df
-  df$end_jul_real <- df$end_jul_1 + start_date_julian - 1
-  df
-  
-  #### Part 2 - convert Julian dates to real dates over 2001 to 2002 by adding julian number to "2000-12-31"
-  df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + df$start_jul_real
-  df$end_date <- as.Date("2000-12-31", format="%Y-%m-%d") + df$end_jul_real
-  
-  #### Part 3 - make pretty versions for start and end date for displaying in the table
-  df$start_display <- as.character(format(df$start_date, "%d-%b"))
-  df$end_display <- as.character(format(df$end_date, "%d-%b"))
   
   df
 }
@@ -208,7 +267,7 @@ phenTable1Fail <- function(laydate_string, prelay_length_days, inc_length_days, 
 #### 1.6 Helper function: prettify the phenTable1 output for display ----
 
 prettyPhenTable1 <- function(table){
-  output <- data.frame(matrix(ncol=4, nrow=5))
+  output <- data.frame(matrix(ncol=4, nrow=nrow(table)))
   colnames(output) <- c("stage", "start", "length", "end")
   output$stage <- table$stage
   output$start <- table$start_display
@@ -235,6 +294,9 @@ prettyPhenTable1 <- function(table){
 # prettyPhenTable1(tablef)
 # findFailDate(table)
 
+# table <- phenTable1Succ("01-01", 26, 79, 31, 240, "biennial")
+# table
+# prettyPhenTable1(table)
 
 ###############################################################################
 ######## SECTION 2 - large phenology tables ###################################
@@ -254,32 +316,51 @@ intersectDays <- function(int1, int2){
 interval2Months <- function(input) {
   stopifnot(class(input) == "Interval") ## check the input is actually an interval!
   
+  ##testing
+  # input <- interval("2000-12-16", "2001-01-20")
+  # year(int_start(input))
+  # int_end(input)
+  # c(year(int_start(input)), year(int_end(input)))
+  
+  ## set up results:
   months <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
   
-  ints2001 <- c(interval("2000-12-31", "2001-01-31"), interval("2001-01-31", "2001-02-28"),
-            interval("2001-02-28", "2001-03-31"), interval("2001-03-31", "2001-04-30"),
-            interval("2001-04-30", "2001-05-31"), interval("2001-05-31", "2001-06-30"),
-            interval("2001-06-30", "2001-07-31"), interval("2001-07-31", "2001-08-31"),
-            interval("2001-08-31", "2001-09-30"), interval("2001-09-30", "2001-10-31"),
-            interval("2001-10-31", "2001-11-30"), interval("2001-11-30", "2001-12-31"))
-  
-  ints2002 <- c(interval("2001-12-31", "2002-01-31"), interval("2002-01-31", "2002-02-28"),
-                interval("2002-02-28", "2002-03-31"), interval("2002-03-31", "2002-04-30"),
-                interval("2002-04-30", "2002-05-31"), interval("2002-05-31", "2002-06-30"),
-                interval("2002-06-30", "2002-07-31"), interval("2002-07-31", "2002-08-31"),
-                interval("2002-08-31", "2002-09-30"), interval("2002-09-30", "2002-10-31"),
-                interval("2002-10-31", "2002-11-30"), interval("2002-11-30", "2002-12-31"))
-  
+  ovls2000 <- vector(mode="numeric", length=12) ## these all initialise with zeros, this is v useful!
   ovls2001 <- vector(mode="numeric", length=12)
   ovls2002 <- vector(mode="numeric", length=12)
   ovls <- vector(mode="numeric", length=12)
   
-  ovls2001 <- replace(sapply(ints2001, intersectDays, int2=input), is.na(sapply(ints2001, intersectDays, int2=input)), 0)
-  ovls2001
-  ovls2002 <- replace(sapply(ints2002, intersectDays, int2=input), is.na(sapply(ints2002, intersectDays, int2=input)), 0)
-  ovls2002
+  ## run overlap ONLY for years in the interval
+  if (2000 %in% c(year(int_start(input)), year(int_end(input)))){
+    ints2000 <- c(interval("1999-12-31", "2000-01-31"), interval("2000-01-31", "2000-02-28"),
+                  interval("2000-02-28", "2000-03-31"), interval("2000-03-31", "2000-04-30"),
+                  interval("2000-04-30", "2000-05-31"), interval("2000-05-31", "2000-06-30"),
+                  interval("2000-06-30", "2000-07-31"), interval("2000-07-31", "2000-08-31"),
+                  interval("2000-08-31", "2000-09-30"), interval("2000-09-30", "2000-10-31"),
+                  interval("2000-10-31", "2000-11-30"), interval("2000-11-30", "2000-12-31"))
+    ovls2000 <- replace(sapply(ints2000, intersectDays, int2=input), is.na(sapply(ints2000, intersectDays, int2=input)), 0)
+  }
+  if (2001 %in% c(year(int_start(input)), year(int_end(input)))){
+    ints2001 <- c(interval("2000-12-31", "2001-01-31"), interval("2001-01-31", "2001-02-28"),
+                  interval("2001-02-28", "2001-03-31"), interval("2001-03-31", "2001-04-30"),
+                  interval("2001-04-30", "2001-05-31"), interval("2001-05-31", "2001-06-30"),
+                  interval("2001-06-30", "2001-07-31"), interval("2001-07-31", "2001-08-31"),
+                  interval("2001-08-31", "2001-09-30"), interval("2001-09-30", "2001-10-31"),
+                  interval("2001-10-31", "2001-11-30"), interval("2001-11-30", "2001-12-31"))
+    ovls2001 <- replace(sapply(ints2001, intersectDays, int2=input), is.na(sapply(ints2001, intersectDays, int2=input)), 0)
+  }
+  if (2002 %in% c(year(int_start(input)), year(int_end(input)))){
+    ints2002 <- c(interval("2001-12-31", "2002-01-31"), interval("2002-01-31", "2002-02-28"),
+                  interval("2002-02-28", "2002-03-31"), interval("2002-03-31", "2002-04-30"),
+                  interval("2002-04-30", "2002-05-31"), interval("2002-05-31", "2002-06-30"),
+                  interval("2002-06-30", "2002-07-31"), interval("2002-07-31", "2002-08-31"),
+                  interval("2002-08-31", "2002-09-30"), interval("2002-09-30", "2002-10-31"),
+                  interval("2002-10-31", "2002-11-30"), interval("2002-11-30", "2002-12-31"))
+    ovls2002 <- replace(sapply(ints2002, intersectDays, int2=input), is.na(sapply(ints2002, intersectDays, int2=input)), 0)
+  }
   
-  ovls[1:12] <- ovls2001[1:12] + ovls2002[1:12]
+  ## sum the results
+  ovls[1:12] <- ovls2000[1:12] + ovls2001[1:12] + ovls2002[1:12]
   
   # reslist <- list(months, ints, ovls) ## output the entire list
   ovls ## output just the numeric vector of overlaps
@@ -290,7 +371,6 @@ interval2Months <- function(input) {
 
 #### 2.3 Helper function 3: create raster equation from phenTableBeta ----
 ## input: prl, inc, brg, psb, nbr number of days in given month
-
 createEquation <- function(vec){
   
   stopifnot(length(vec)==6)
@@ -339,7 +419,7 @@ createEquation <- function(vec){
 
 
 ###############################################################################
-#### 2.4 Main function: monthly phenology for BETA (successful breeders) ---- #
+#### 2.4 Main function: monthly phenology for BREEDERS (succ and fail) ---- ###
 ###############################################################################
 
 ## input: phenTable1
@@ -474,4 +554,79 @@ phenTableBreed <- function(table, updateProgress=NULL){
 
 # interval2Months(prl_interval)
 # input <- prl_interval
+
+###############################################################################
+#### 2.5-7 Main function: monthly phenology for NON- and PRE-BREEDERS ---- ####
+###############################################################################
+
+#### 2.5 Main function: Monthly phenology table for Adult non-breeders (Sabbaticals)
+phenTableDelta <- function() { ## has no args
+  ## Define output data frame
+  df <- data.frame(matrix(nrow=12, ncol=7))
+  colnames(df) <- c("month", "n_days", "pre_laying", "incubation", "brood_guard","post_brood","non_breeding")
+  df[ ,1] <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  df[ ,2] <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  df
+  
+  ## replace NA with 0
+  df[is.na(df)] <- as.integer(0)
+  # df
+  
+  ## fill in non-breeding column with the full number of days per month as they are always non-breeding ----
+  df$non_breeding <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  # df
+  
+  ### Add in equation column for how to combine distributions per month ----
+  all_list <- list(as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)), 
+                   df$pre_laying, df$incubation,
+                   df$brood_guard, df$post_brood, df$non_breeding)
+  all_list
+  length(all_list[[6]])
+  all_list[1]
+  
+  eqs <- vector(mode="character", length=12)
+  for (i in 1:12){
+    # i <- 1
+    args <- as.integer(paste(lapply(all_list, `[[`, i)))
+    eqs[i] <- createEquation(args)
+  }
+  df$equation_to_combine_distributions <- eqs
+  
+  ## output
+  df
+}
+
+#### 2.6 Main function: Monthly phenology table for Immatures
+phenTableTheta <- function() { ## has no args
+  ## Define output data frame
+  df <- data.frame(matrix(nrow=12, ncol=4))
+  colnames(df) <- c("month", "n_days", "immature_distribution", "equation_to_combine_distributions")
+  df[ ,1] <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  df[ ,2] <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  df[ ,3] <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  df[1:3, 4] <- "immature_Q1"
+  df[4:6, 4] <- "immature_Q2"
+  df[7:9, 4] <- "immature_Q3"
+  df[10:12, 4] <- "immature_Q4"
+  df
+}
+
+#### 2.7 Main function: Monthly phenology table for Juveniles
+phenTableZeta <- function() { ## has no args
+  ## Define output data frame
+  df <- data.frame(matrix(nrow=12, ncol=4))
+  colnames(df) <- c("month", "n_days", "juvenile_distribution", "equation_to_combine_distributions")
+  df[ ,1] <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  df[ ,2] <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  df[ ,3] <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  df[1:3, 4] <- "juvenile_Q1"
+  df[4:6, 4] <- "juvenile_Q2"
+  df[7:9, 4] <- "juvenile_Q3"
+  df[10:12, 4] <- "juvenile_Q4"
+  df
+}
+
+
+
+
 
