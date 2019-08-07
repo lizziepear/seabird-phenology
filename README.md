@@ -21,6 +21,7 @@ R Shiny app to create monthly phenology tables for each pool of individuals in a
 
 1. Download the source code from this repository;
 1. Ensure you have an updated version of R and RStudio installed;
+1. Open the file `app.R` in RStudio;
 1. Ensure you have the required packages installed and loaded: `shiny`, `shinydashboard`, `lubridate`;
 1. Change the working directory in line 15 to your working directory;
 1. Click 'Run App' in the top right-hand corner of RStudio's code editor.
