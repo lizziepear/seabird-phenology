@@ -18,6 +18,18 @@
   font-size: 24px;
 }
 
+body {
+  /*font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;*/
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+  /*font-family: 'Bree Serif', Helvetica, Arial, sans-serif;*/
+}
+
+h1,
+h2 {
+  font-family: 'Bree Serif', Helvetica, Arial, sans-serif;
+  font-weight: 700;
+}
+
 .sidebar-menu li { 
 	/*margin-bottom: 2px;*/
 }

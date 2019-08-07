@@ -279,6 +279,7 @@ prettyPhenTable1 <- function(table){
       output$end[i] <- NA
     }
   }
+  colnames(output) <- c("breeding stage", "start date", "length (days)", "end date")
   output
 }
 
@@ -300,6 +301,7 @@ prettyPhenTable1 <- function(table){
 
 #### 1.7 Main funciton: plot the breeding cyle to show graphically ----
 plotCycle <- function(table, species_type) {
+  ## input to function: phenTable1Succ()
   
   mycols <- c("#ffd900", "#ffa53f", "#ff727f", "#c772f1", "#0084ff")
   
@@ -654,6 +656,381 @@ phenTableZeta <- function() { ## has no args
   df
 }
 
+
+###############################################################################
+#### 3.1 Main function: Produce full metadata table ---- ######################
+###############################################################################
+
+## INPUTS: (laydate_string, prelay_length_days, inc_length_days, brood_length_days, post_length_days, species_type)
+phenMetaFull <- function(laydate_string, prelay_length_days, inc_length_days, brood_length_days, post_length_days,
+                         Species=NULL, IslandGroup=NULL, updateProgress=NULL){
+  ## NB. does not use species_type - assumes annual.
+  
+  # #### parameters for testing:
+  # laydate_string <- "01-01"
+  # prelay_length_days <- 26
+  # inc_length_days <- 79
+  # brood_length_days <- 31
+  # post_length_days <- 240
+  # Species <- "Wandering Albatross"
+  # IslandGroup <- "Kerguelen" ## show as Population in the app
+  
+  #### Set up results dataframe ----
+  results <- data.frame(matrix(nrow=0, ncol=5))
+  fields <- c("DemClass", "Month", "Age",
+              "BreedStage", "NumDays")
+  colnames(results) <- fields
+  
+  ######################################################################################
+  
+  ####### 1. DemClass BETA (successful breeders) -----
+  
+  ## find phenTab1 for Succ
+  tableBeta <- phenTable1Succ(laydate_string, prelay_length_days, inc_length_days, brood_length_days, post_length_days, species_type = "annual")
+  
+  ## Define the intervals for each breed stage based on phenTable1
+  prl_interval <- interval(tableBeta[1,7]-1, tableBeta[1,8])
+  inc_interval <- interval(tableBeta[2,7]-1, tableBeta[2,8])
+  brg_interval <- interval(tableBeta[3,7]-1, tableBeta[3,8])
+  psb_interval <- interval(tableBeta[4,7]-1, tableBeta[4,8])
+  nbr_interval <- interval(tableBeta[5,7]-1, tableBeta[5,8])
+  
+  ## Compute the monthly table, as before ----
+  df <- data.frame(matrix(nrow=12, ncol=7))
+  colnames(df) <- c("month", "n_days", "pre_laying", "incubation", "brood_guard","post_brood","non_breeding")
+  df[ ,1] <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  df[ ,2] <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "adult breeders")}
+  df$pre_laying <- as.integer(replace(interval2Months(prl_interval), is.na(interval2Months(prl_interval)), 0)) ## replacing any NAs with 0s
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "adult breeders")}
+  df$incubation <- as.integer(replace(interval2Months(inc_interval), is.na(interval2Months(inc_interval)), 0))
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "adult breeders")}
+  df$brood_guard <- as.integer(replace(interval2Months(brg_interval), is.na(interval2Months(brg_interval)), 0))
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "adult breeders")}
+  df$post_brood <- as.integer(replace(interval2Months(psb_interval), is.na(interval2Months(psb_interval)), 0))
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "adult non-breeders")}
+  df$non_breeding <- as.integer(replace(interval2Months(nbr_interval), is.na(interval2Months(nbr_interval)), 0))
+  
+  ## replace NA with 0
+  df[is.na(df)] <- 0
+  # df
+  
+  #### fill in temp results dataframe for BETA ----
+  res.beta <- data.frame(matrix(nrow=0, ncol=5))
+  colnames(res.beta) <- fields
+  
+  #### LOOP over all the months 1:12 ----
+  for (m in 1:12){
+    
+    ## make results df for this month
+    res.beta.m <- data.frame(matrix(nrow=0, ncol=5))
+    colnames(res.beta.m) <- fields
+    
+    ## make data frame of overlaps for this month
+    m.tab <- data.frame(matrix(ncol=2, nrow=5))
+    colnames(m.tab) <- c("stage", "ndays")
+    m.tab$stage <- colnames(df[m, 3:7])
+    m.tab$ndays <- as.numeric(df[m, 3:7])
+    # m.tab
+    
+    ## loop over the number of overlaps
+    m.tab.ovl <- subset(m.tab, ndays > 0)
+    # m.tab.ovl
+    
+    #### LOOP over all the breed stages that overlap with this month ----
+    for (r in 1:nrow(m.tab.ovl)){
+      ## make results df for this month/stage
+      res.beta.m.tmp <- data.frame(matrix(nrow=1, ncol=5))
+      colnames(res.beta.m.tmp) <- fields
+      
+      ## fill in results for this month/stage
+      res.beta.m.tmp$Month[1] <- m                    ## month
+      res.beta.m.tmp$BreedStage[1] <- m.tab.ovl[r,1]  ## breed stage
+      res.beta.m.tmp$NumDays <- m.tab.ovl[r,2]        ## ndays
+      res.beta.m.tmp
+      
+      ## append to result for this month
+      res.beta.m <- rbind(res.beta.m, res.beta.m.tmp)
+      
+      ## clean up
+      rm(res.beta.m.tmp)
+      
+    }
+    # res.beta.m
+    
+    ## Append results for this month to the main beta results
+    res.beta <- rbind(res.beta, res.beta.m)
+    
+    ## clean up files for this month
+    rm(res.beta.m, m.tab, m.tab.ovl)
+    
+  }
+  
+  #### Fill in other important details for BETA ----
+  res.beta$DemClass <- "beta"
+  res.beta$Age <- "adult"
+  # res.beta
+  
+  #### Append BETA to full results data frame ----
+  results <- rbind(results, res.beta)
+  
+  ## clean up files from demClass BETA
+  rm(prl_interval, inc_interval, brg_interval, psb_interval, nbr_interval,
+     df, res.beta, tableBeta, m, r)
+  
+  # results
+  
+  ######################################################################################
+  ####### 2. DemClass GAMMA (fail breeders) -----
+  
+  ## find phenTab1 for Fail
+  tableGamma <- phenTable1Fail(laydate_string, prelay_length_days, inc_length_days, brood_length_days, post_length_days)
+  
+  ## Define the intervals for each breed stage based on phenTable1
+  prl_interval <- interval(tableGamma[1,7]-1, tableGamma[1,8])
+  inc_interval <- interval(tableGamma[2,7]-1, tableGamma[2,8])
+  brg_interval <- interval(tableGamma[3,7]-1, tableGamma[3,8])
+  psb_interval <- interval(tableGamma[4,7]-1, tableGamma[4,8])
+  nbr_interval <- interval(tableGamma[5,7]-1, tableGamma[5,8])
+  
+  ## Compute the monthly table, as before ----
+  df <- data.frame(matrix(nrow=12, ncol=7))
+  colnames(df) <- c("month", "n_days", "pre_laying", "incubation", "brood_guard","post_brood","non_breeding")
+  df[ ,1] <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  df[ ,2] <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "adult non-breeders")}
+  df$pre_laying <- as.integer(replace(interval2Months(prl_interval), is.na(interval2Months(prl_interval)), 0)) ## replacing any NAs with 0s
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "adult non-breeders")}
+  df$incubation <- as.integer(replace(interval2Months(inc_interval), is.na(interval2Months(inc_interval)), 0))
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "immatures")}
+  df$brood_guard <- as.integer(replace(interval2Months(brg_interval), is.na(interval2Months(brg_interval)), 0))
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "immatures")}
+  df$post_brood <- as.integer(replace(interval2Months(psb_interval), is.na(interval2Months(psb_interval)), 0))
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "juveniles")}
+  df$non_breeding <- as.integer(replace(interval2Months(nbr_interval), is.na(interval2Months(nbr_interval)), 0))
+  
+  ## replace NA with 0
+  df[is.na(df)] <- 0
+  # df
+  
+  #### fill in temp results dataframe for GAMMA ----
+  res.gamma <- data.frame(matrix(nrow=0, ncol=5))
+  colnames(res.gamma) <- fields
+  
+  #### LOOP over all the months 1:12 ----
+  for (m in 1:12){
+    
+    ## make results df for this month
+    res.gamma.m <- data.frame(matrix(nrow=0, ncol=5))
+    colnames(res.gamma.m) <- fields
+    
+    ## make data frame of overlaps for this month
+    m.tab <- data.frame(matrix(ncol=2, nrow=5))
+    colnames(m.tab) <- c("stage", "ndays")
+    m.tab$stage <- colnames(df[m, 3:7])
+    m.tab$ndays <- as.numeric(df[m, 3:7])
+    # m.tab
+    
+    ## loop over the number of overlaps
+    m.tab.ovl <- subset(m.tab, ndays > 0)
+    # m.tab.ovl
+    
+    #### LOOP over all the breed stages that overlap with this month ----
+    for (r in 1:nrow(m.tab.ovl)){
+      ## make results df for this month/stage
+      res.gamma.m.tmp <- data.frame(matrix(nrow=1, ncol=5))
+      colnames(res.gamma.m.tmp) <- fields
+      
+      ## fill in results for this month/stage
+      res.gamma.m.tmp$Month[1] <- m                    ## month
+      res.gamma.m.tmp$BreedStage[1] <- m.tab.ovl[r,1]  ## breed stage
+      res.gamma.m.tmp$NumDays <- m.tab.ovl[r,2]        ## ndays
+      res.gamma.m.tmp
+      
+      ## append to result for this month
+      res.gamma.m <- rbind(res.gamma.m, res.gamma.m.tmp)
+      
+      ## clean up
+      rm(res.gamma.m.tmp)
+      
+    }
+    # res.gamma.m
+    
+    ## Append results for this month to the main gamma results
+    res.gamma <- rbind(res.gamma, res.gamma.m)
+    
+    ## clean up files for this month
+    rm(res.gamma.m, m.tab, m.tab.ovl)
+    
+  }
+  
+  #### Fill in other important details for GAMMA ----
+  res.gamma$DemClass <- "gamma"
+  res.gamma$Age <- "adult"
+  # res.gamma
+  
+  #### Append GAMMA to full results data frame ----
+  results <- rbind(results, res.gamma)
+  
+  ## clean up files from demClass GAMMA
+  rm(prl_interval, inc_interval, brg_interval, psb_interval, nbr_interval,
+     df, res.gamma, tableGamma, m, r)
+  
+  # results
+  
+  ######################################################################################
+  ####### 3. DemClass DELTA (sabbatical adults / non-breeders) -----
+  if (is.function(updateProgress)) {updateProgress(detail = "juveniles")}
+  
+  res.delta <- data.frame(matrix(ncol=5, nrow=12))
+  colnames(res.delta) <- fields
+  res.delta$DemClass <- "delta"
+  res.delta$Month <- as.integer(c(1,2,3,4,5,6,7,8,9,10,11,12))
+  res.delta$Age <- "adult"
+  res.delta$BreedStage <- "non_breeding"
+  res.delta$NumDays <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  res.delta
+  
+  results <- rbind(results, res.delta)
+  
+  ## clean up
+  rm(res.delta)
+  
+  ######################################################################################
+  ####### 4. DemClass THETA (immatures) -----
+  if (is.function(updateProgress)) {updateProgress(detail = "juveniles")}
+  
+  res.theta <- data.frame(matrix(ncol=5, nrow=12))
+  colnames(res.theta) <- fields
+  res.theta$DemClass <- "theta"
+  res.theta$Month <- as.integer(c(1,2,3,4,5,6,7,8,9,10,11,12))
+  res.theta$Age <- "immature"
+  res.theta$BreedStage <- "non_breeding"
+  res.theta$NumDays <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  res.theta
+  
+  results <- rbind(results, res.theta)
+  
+  ## clean up
+  rm(res.theta)
+  
+  ######################################################################################
+  ####### 5. DemClass ZETA (juveniles) -----
+  if (is.function(updateProgress)) {updateProgress(detail = "juveniles")}
+  
+  res.zeta <- data.frame(matrix(ncol=5, nrow=12))
+  colnames(res.zeta) <- fields
+  res.zeta$DemClass <- "zeta"
+  res.zeta$Month <- as.integer(c(1,2,3,4,5,6,7,8,9,10,11,12))
+  res.zeta$Age <- "juvenile"
+  res.zeta$BreedStage <- "non_breeding"
+  res.zeta$NumDays <- as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  res.zeta
+  
+  results <- rbind(results, res.zeta)
+  
+  ## clean up
+  rm(res.zeta)
+  
+  ######################################################################################
+  ####### 6. Add in remaining columns -----
+  if (is.function(updateProgress)) {updateProgress(detail = "preparing download")}
+  
+  # results
+  ## make ordering column to reorder after merges!
+  results$ordem <- c(1:nrow(results))
+  
+  
+  #### make useful reference data frames ----
+  ref.months <- data.frame(Month = as.integer(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)),
+                           MonthLength = as.integer(c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)))
+  ref.nest.dist <- data.frame(BreedStage = c("pre_laying", "incubation", "brood_guard","post_brood",
+                                             "non_breeding"),
+                              HalfOnNest = c(TRUE, TRUE, TRUE, FALSE, FALSE),
+                              IdealDist = c("PRE-L", "INC", "BR", "PB", "NB_Q?"))
+  
+  ## Species - user input
+  ## check for input
+  if (is.null(Species)){
+    results$Species <- NA
+  } else {
+    results$Species <- as.character(Species)
+  }
+  
+  ## IslandGroup - user input
+  if (is.null(IslandGroup)){
+    results$IslandGroup <- NA
+  } else {
+    results$IslandGroup <- as.character(IslandGroup)
+  }
+  
+  ## MonthLength - according to Month
+  results <- merge(results, ref.months, by.x = "Month", by.y = "Month")
+  
+  ## HalfOnNest - according to BreedStage
+  ## IdealDist - according to BreedStage and Month
+  results <- merge(results, ref.nest.dist, by.x = "BreedStage", by.y = "BreedStage")
+  
+  ## change IdealDist to character
+  results$IdealDist <- as.character(results$IdealDist)
+  
+  #### CHANGE FOR DELTA, THETA, ZETA
+  ## Delta: NB_Q1, NB_Q2, NB_Q3, NB_Q4
+  results[which(results$Age=="adult" & results$BreedStage=="non_breeding" & results$Month %in% c(1,2,3)), ## find rows
+          grep("IdealDist", colnames(results))] <- "NB_Q1" ## find column IdealDist
+  results[which(results$Age=="adult" & results$BreedStage=="non_breeding" & results$Month %in% c(4,5,6)), ## find rows
+          grep("IdealDist", colnames(results))] <- "NB_Q2"
+  results[which(results$Age=="adult" & results$BreedStage=="non_breeding" & results$Month %in% c(7,8,9)), ## find rows
+          grep("IdealDist", colnames(results))] <- "NB_Q3"
+  results[which(results$Age=="adult" & results$BreedStage=="non_breeding" & results$Month %in% c(10,11,12)), ## find rows
+          grep("IdealDist", colnames(results))] <- "NB_Q4"
+  
+  if (is.function(updateProgress)) {updateProgress(detail = "preparing download")}
+  
+  ## Theta: IMM_Q4_Q1, IMM_Q2_Q3
+  results[which(results$Age=="immature" & results$BreedStage=="non_breeding" & results$Month %in% c(1,2,3,10,11,12)), ## find rows
+          grep("IdealDist", colnames(results))] <- "IMM_Q4_Q1"
+  results[which(results$Age=="immature" & results$BreedStage=="non_breeding" & results$Month %in% c(4,5,6,7,8,9)), ## find rows
+          grep("IdealDist", colnames(results))] <- "IMM_Q2_Q3"
+  ## Zeta: JUV_Q4_Q1, JUV_Q2_Q3
+  results[which(results$Age=="juvenile" & results$BreedStage=="non_breeding" & results$Month %in% c(1,2,3,10,11,12)), ## find rows
+          grep("IdealDist", colnames(results))] <- "JUV_Q4_Q1"
+  results[which(results$Age=="juvenile" & results$BreedStage=="non_breeding" & results$Month %in% c(4,5,6,7,8,9)), ## find rows
+          grep("IdealDist", colnames(results))] <- "JUV_Q2_Q3"
+  
+  ## Device - leave blank for user to fill in
+  results$Device <- NA
+  ## RepAge and RepBreedStage - leave blank for user to fill in
+  results$RepAge <- NA
+  results$RepBreedStage <- NA
+  
+  ## Replace underscores with hyphens for output
+  results$BreedStage <- as.character(results$BreedStage)
+  results$BreedStage <- gsub("_", "-", results$BreedStage)
+  
+  ## Reorder rows before producing output
+  results <- results[order(results$ordem), ]
+  
+  ## Reorder columns
+  output <- data.frame(Species = results$Species, IslandGroup = results$IslandGroup, DemClass = results$DemClass,
+                       Month = results$Month, MonthLength = as.integer(results$MonthLength), Device = results$Device,
+                       Age = results$Age, BreedStage = results$BreedStage, IdealDist = results$IdealDist,
+                       NumDays = as.integer(results$NumDays), HalfOnNest = results$HalfOnNest, RepAge = results$RepAge,
+                       RepBreedStage = results$RepBreedStage)
+  
+  ## RETURN OUTPUT
+  output
+}
 
 
 

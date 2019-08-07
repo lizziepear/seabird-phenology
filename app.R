@@ -12,13 +12,10 @@ library(shiny)
 library(shinydashboard)
 library(lubridate)
 
-# setwd("C:/Users/Lizzie/OneDrive/Documents/PROJECTS/shiny-dashboard")
-setwd("C:/Users/eliza/OneDrive/Documents/PROJECTS/seabird-phenology")
+# setwd("C:/Users/Lizzie/OneDrive/Documents/PROJECTS/seabird-phenology")
 
 ## load source functions
 source("functions_phenology.R")
-source("functions_demography.R")
-
 
 #### writing inputs ----
 
@@ -33,13 +30,6 @@ html_to_insert_flowchart <- paste0('
         ')
 
 html_framework <- paste0('
-  <h2>Mapping the global distribution of seabird populations: a framework for integrating tracking, demographic and phenological datasets</h2>
-  <p>This app is designed to help users understand the methods for incoporating phenology into seabird density maps, and create their own phenology metadata tables for including in the framework presented.
-  </p>
-  <p>[MORE INFORMATION ON PHENOLOGY METHODS HERE
-	<ul><li>Example of an annual species breeding cycle, plus diagram</li><li>Example of a biennial species plus diagram</li></ul>
-  </p>
-  <br>
   <p>Steps in the framework:
 	  <ol>
 		  <li>Download data from the Seabird Tracking Database</li>
@@ -51,12 +41,24 @@ html_framework <- paste0('
 			    <li>03_kernels</li>
 		    </ul>
 		  <li>Do a bootstrap analysis - following instructions in [1] and [2]</li>
-		  <li>Follow the instructions and run the R files (in the corresponding order):</li>
+		  <li>Follow the instructions and run the R scripts (in the corresponding order):</li>
 		    <ul>
 			    <li>04_combining_selecting_renaming</li>
 			    <li>05_land_mask</li>
 		    </ul>
 		  <li>Create metadata based on phenology</li>
+        <ul>
+          <li>Use this app to help fill in the template</li>
+        </ul>
+      <li>Follow the instructions and run the R scripts (in the corresponding order):</li>
+        <ul>
+          <li>06_combining_metadata_files (only combine with the the demography results if downloading your metadata using this app)</li>
+          <li>07_monthly_equations</li>
+          <li>08_quarter_combinations</li>
+          <li>09_sum_demClasses</li>
+          <li>10_aggregate_5by5_grid</li>
+          <li>11_year_combination</li>
+        </ul>
 	  </ol>
   </p>
   ')
@@ -74,8 +76,23 @@ sidebar <- dashboardSidebar(
       # menuSubItem("Explore phenology", tabName = "phen_inputs", icon = icon("calendar-alt"))
     ), # 
     
+    # menuItem(actionLink(inputId = "goMetaDownload", label = "Download phenology metadata", icon = icon("file-csv"))),
+    
+    menuItem("Download files", tabName = "download", icon = icon("file-download")
+      # menuSubItem(actionLink(inputId = "goMetaDownload", label = tagList(shiny::icon("file-download")," Phenology metadata"))
+    ),
+    
+    menuItem("Source code for this app", icon = icon("external-link-alt"), href = "https://github.com/lizziepear/seabird-phenology"),
     menuItem("R Scripts for framework", icon = icon("external-link-alt"), href = "https://github.com/anacarneiro/DensityMaps"),
-    menuItem("Seabird Tracking Database", icon = icon("external-link-alt"), href = "http://seabirdtracking.org")#,
+    menuItem("Seabird Tracking Database", icon = icon("external-link-alt"), href = "http://seabirdtracking.org"),
+    
+    HTML('<a href="http://www.birdlife.org/">
+      <img src="BLI_logo.png" alt="BirdLife Internationl" style="width:220px;position:fixed;bottom:0;padding:10px;">
+      </a>')
+    
+    # img(style="position:fixed;bottom:0;padding:10px;", src="BLI_logo.png", width= 220, alt = "BirdLife International")
+    
+    # div(class="footer", img(src="BLI_logo.png", width = 220))
     
   )
 )
@@ -93,8 +110,23 @@ body <- dashboardBody(
   
   tabItems(
     tabItem(tabName = "introduction",
-      h2("Introduction"),
-      HTML(html_framework)
+            h2("Mapping the global distribution of seabird populations: a framework for integrating tracking, demographic and phenological datasets"),
+            h4("This app is designed to help users understand the methods for incoporating phenology into seabird density maps, and create their own phenology metadata tables for including in the framework presented."),
+      box(title = "Steps in the framework", status = "primary", width = 6, solidHeader = TRUE, 
+          HTML(html_framework)
+      ),
+      box(title = "Example of annual species breeding cycle", status = "success", width = 6, solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+          p(strong("Species / population: "), "Black-browed Albatross, Falkland Islands"),
+          tableOutput("phenTabBBA"),
+          p(strong("Cycle spans one year:")),
+          plotOutput("cycleBBA", width = "600px", height = "250px")
+      ),
+      box(title = "Example of biennial species breeding cycle", status = "success", width = 6, solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+          p(strong("Species / population: "), "Tristan Albatross, Gough Island"),
+          tableOutput("phenTabTRA"),
+          p(strong("Cycle spans two years:")),
+          plotOutput("cycleTRA", width = "600px", height = "250px")
+      )
     ),
     
     tabItem(tabName = "framework",
@@ -102,13 +134,27 @@ body <- dashboardBody(
       HTML(html_to_insert_flowchart)
     ),
     
-    # tabItem(tabName = "phenology",
-    #   h2("phenology info here")
-    # ),
+    tabItem(tabName = "download",
+      h2("Prepare phenology metadata to download"),
+      box(title = "Create downloadable data file", status = "primary", width = 6, solidHeader = TRUE, collapsible = FALSE,
+          p(tags$strong("Optional: "), "Input species and population information:"),
+          textInput(inputId = "Species", label = "Species name"),
+          textInput(inputId = "IslandGroup", label = "Population name"),
+          tags$br(),
+          actionButton(inputId = "goFullMeta", label = "Step 1. Calculate full phenology metadata table", icon = icon("cogs")),
+          tags$br(), tags$br(),
+          downloadButton(outputId = "phenDownload", label = "Step 2. Download full phenology metadata table as a .csv file", icon = icon("file-download")),
+          tags$br(), tags$br(),
+          p(tags$strong("Please note:"), " you will need to fill in some fields manually:", tags$ul(tags$li("Device type"), tags$li("Replacement distributions to use (both Age and Breed Stage)")))
+          ),
+      
+      box(title = "Full metadata table", status = "success", width = 12, solidHeader = TRUE, collapsible = TRUE,
+          tableOutput("fullMeta"))
+    ),
     
     tabItem(tabName = "phenology", 
       h2("Phenology timings for your population"),
-      box(title = "Inputs", color = "light-blue", width = 4, solidHeader = TRUE, collapsible = TRUE,
+      box(title = "Inputs", status = "primary", width = 4, solidHeader = TRUE, collapsible = TRUE,
         ## Input: Selector for choosing species type ----
         radioButtons(inputId = "species_type", label = "Species breeding cycle type", choices = c("annual", "biennial"), selected="annual"),
         ## Input mean length of pre-laying
@@ -130,21 +176,9 @@ body <- dashboardBody(
         
       ),
       
-    box(title = "Breeding cycle", plotOutput("breedCycle", width = "600px", height = "250px")),
-      # box(title = tagList(shiny::icon("gear"), "Calculate monthly phenology tables"), 
-      #     status = "primary", width = 4, solidHeader = TRUE, collapsible = TRUE,
-      #     ## Action button to trigger calculation
-      #     p("Successful breeders:"),
-      #     # p("Adult sucessful breeders:") ## TODO: add options to calculate and display the timings for each pool of birds - as tabset isn't working.
-      #     
-      #     tags$br(),
-      #     p("Fail breeders:"),
-      #     # p("Adult sucessful breeders:") ## TODO: add options to calculate and display the timings for each pool of birds - as tabset isn't working.
-      #     
-      #     tags$br(),
-      #     p("Adult sabbaticals, immatures and juveniles:"),
-      #     actionButton("goAll", "Go")
-      # ),
+      box(title = "Breeding cycle", status = "primary", 
+        plotOutput("breedCycle", width = "600px", height = "250px")),
+      
       box(title = "Monthly phenology for successful breeders", 
           status = "warning", width = 12, solidHeader = T, collapsible = TRUE,
           actionButton("goSB", tagList(shiny::icon("gear"), "Calculate")),
@@ -184,6 +218,22 @@ ui <- dashboardPage(
 
 server <- function(input, output) {
   
+  ################# Example breeding cycles for first page #############################
+  ### Biennial example: Tristan Albatross, Gough island
+  output$phenTabTRA <- renderTable({
+    prettyPhenTable1(phenTable1Succ("16-12", 25, 75, 31, 259, "biennial"))
+  })
+  output$cycleTRA <- renderPlot({
+    plotCycle(phenTable1Succ("16-12", 25, 75, 31, 259, "biennial"), "biennial")
+  })
+  # Annual example: Black-browed Albatross, Falkland Islands
+  output$phenTabBBA <- renderTable({
+    prettyPhenTable1(phenTable1Succ("10-10", 22, 68, 20, 94, "annual"))
+  })
+  output$cycleBBA <- renderPlot({
+    plotCycle(phenTable1Succ("10-10", 22, 68, 20, 94, "annual"), "annual")
+  })
+  
   ################## Summary phenology table ---- #######################################
   
   ############ success ################
@@ -215,7 +265,8 @@ server <- function(input, output) {
   #### Make output showing fail date as a text output ----
   makeFailDate <- reactive({
     req(input$laydate_string, input$inc_length_days, input$brood_length_days, input$post_length_days)
-    findFailDate(makePhenTable1Succ())
+    # findFailDate(makePhenTable1Succ()) ## this does change based on species_type
+    findFailDate(phenTable1Succ(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days, "biennial")) ## find fail date always based on biennial
   })
   ## Render Fail Date as text:
   output$failDate <- renderText({
@@ -226,7 +277,7 @@ server <- function(input, output) {
   ## Make the first phenTable1 table
   makePhenTable1Fail <- reactive({
     req(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days)
-    phenTable1Fail(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days)
+    phenTable1Fail(input$laydate_string, input$prelay_length_days, input$inc_length_days, input$brood_length_days, input$post_length_days) ## Fail table does not change based on species_type
   })
   ## Make the pretty version of phenTable1
   makePrettyPhenTable1Fail <- reactive({
@@ -319,6 +370,43 @@ server <- function(input, output) {
   output$phenTabZeta <- renderTable({
     makePhenTableZeta()
   })
+  
+  
+  ################## Make full metadata table ---- ########################
+  makeFullMeta <- eventReactive(input$goFullMeta, {
+    
+    ## create a progress object
+    progress <- shiny::Progress$new()
+    progress$set(message = "Computing metadata", value = 0)
+    ## close the progress when the reactive exits, even if there's an error:
+    on.exit(progress$close())
+    
+    updateProgress <- function(value = NULL, detail = NULL) {
+      if (is.null(value)) {
+        value <- progress$getValue()
+        value <- value + (progress$getMax() - value) / 5
+      }
+      progress$set(value = value, detail = detail)
+    }
+    
+    phenMetaFull(input$laydate_string, input$prelay_length_days, 
+                 input$inc_length_days, input$brood_length_days, input$post_length_days, 
+                 input$Species, input$IslandGroup, updateProgress)
+  })
+  ## Render the full metadata phenology table ----
+  output$fullMeta <- renderTable({
+    makeFullMeta()
+  })
+  
+  ################## Download full metadata table ---- ####################
+  output$phenDownload <- downloadHandler(
+    filename = function() {
+      paste("metadata_monthly_equations", ".csv", sep="")
+    },
+    content = function(file) {
+      write.csv(makeFullMeta(), file, row.names = FALSE)
+    }
+  )
   
 }
 
