@@ -1,21 +1,23 @@
 ## Seabird phenology
 
-R Shiny app to create monthly phenology tables for each pool of individuals in a population, and create equations to combine distribution rasters for each breeding stage with the correct weightings to produce an average monthly distribution raster for each group.
+R Shiny app to create monthly phenology tables for each pool of individuals in a population, and create equations to combine distribution rasters for each breeding stage with the correct weightings to produce an average monthly distribution raster for each group. 
 
-**Inputs:**
-- Average laying date
-- Average length in days of the different stages of the breeding cycle: pre-laying, incubation, brood-guard, post-guard.
+This is part of the framework developed by Ana Carneiro & Lizzie Pearmain as part of the methods paper Carneiro *et al*. (in prep) '**Mapping the global distribution of seabird populations: a framework for integrating tracking, demographic and phenological datasets**'. R scripts for the rest of the framework are available at https://github.com/anacarneiro/DensityMaps.
 
-**Outputs:**
-- Summary phenology table showing dates and duration of each stage of the breeding cycle
-- Monthly phenology table showing the number of days per month in each breeding stage for the different groups of birds in the population:
-  - Adult successful breeders
-  - Adult fail breeders
-  - Adult non-breeders (sabbaticals)
-  - Immatures
-  - Juveniles
-- Downloadable csv file of phenology metadata for input into the R codes developed by Ana Carneiro & Lizzie Pearmain as part of the methods paper Carneiro *et al*. (in prep) *Mapping the global distribution of seabird populations: a framework for integrating tracking, demographic and phenological datasets*.
+### Inputs:
+- Average egg-laying date for the population;
+- Average duration in days of the different stages of the breeding cycle: pre-laying, incubation, brood-guard, post-guard.
 
+### Outputs:
+* Summary phenology table showing dates and duration of each stage of the breeding cycle
+* Monthly phenology table showing the number of days per month in each breeding stage for the different groups of birds in the population:
+    * Adult breeders (adults attempting to breed in a given year)
+        * Successful breeders (complete the breeding cycle through to chick fledging)
+        * Fail breeders (fail partway through the breeding cycle)
+    * Adult non-breeders (sabbatical adults, or adults deferring breeding for a given year)
+    * Immatures (birds from second year at sea until the age of first breeding)
+    * Juveniles (fledged chicks in their first year at sea)
+* Downloadable csv file of phenology metadata for input into the rest of the R scripts for the analysis framework.
 
 ## How to run this app
 
@@ -25,3 +27,6 @@ R Shiny app to create monthly phenology tables for each pool of individuals in a
 1. Ensure you have the required packages installed and loaded: `shiny`, `shinydashboard`, `lubridate`;
 1. Change the working directory in line 15 to your working directory;
 1. Click 'Run App' in the top right-hand corner of RStudio's code editor.
+
+## License information
+This software is licensed under the GNU General Public License version 3 (see LICENSE.md).
