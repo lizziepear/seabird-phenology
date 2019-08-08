@@ -64,7 +64,6 @@ phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, 
     df <- data.frame(matrix(ncol=10, nrow=5))
     colnames(df) <- c("stage", "length", "start_jul_1", "end_jul_1", "start_jul_real", "end_jul_real", "start_date", "end_date", "start_display", "end_display")
     df[ ,1] <- c("pre-laying", "incubation", "brood-guard", "post-brood", "non-breeding")
-    df
     
     ## fill in the length values
     df[1,2] <- prelay_length_days
@@ -75,27 +74,22 @@ phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, 
     }
     df[4,2] <- post_length_days
     df[5,2] <- 365 - sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)
-    df
     
     ## fill in the table of START julian values from 1
     df[1,3] <- 1
     for (k in 1:4){
       df[k+1,3] <- df[k,3] + df[k,2]
     }
-    df
     
     ## fill in the table of END julian values
     df[1,4] <- df[1,2]
     for (m in 1:4){
       df[m+1,4] <- df[m,4] + df[m+1,2]
     }
-    df
     
     ## fill in the table of real julian values - just add (start_date_julian -1) to each start_jul_1 value.
     df$start_jul_real <- df$start_jul_1 + start_date_julian - 1
-    df
     df$end_jul_real <- df$end_jul_1 + start_date_julian - 1
-    df
     
     #### Part 2 - convert Julian dates to real dates over 2001 to 2002 by adding julian number to "2000-12-31"
     df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$start_jul_real)
@@ -111,7 +105,6 @@ phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, 
     df <- data.frame(matrix(ncol=10, nrow=6))
     colnames(df) <- c("stage", "length", "start_jul_1", "end_jul_1", "start_jul_real", "end_jul_real", "start_date", "end_date", "start_display", "end_display")
     df[ ,1] <- c("pre-laying", "incubation", "brood-guard", "post-brood", "non-breeding year 1", "non-breeding year 2")
-    df
     
     ## fill in the length values
     df[1,2] <- prelay_length_days
@@ -125,27 +118,22 @@ phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, 
       df[5,2] <- 365 - sum(prelay_length_days, inc_length_days, brood_length_days, post_length_days)
       df[6,2] <- 365
     }
-    df
     
     ## fill in the table of START julian values from 1
     df[1,3] <- 1
     for (k in 1:5){ ## changed from (k in 1:4)
       df[k+1,3] <- df[k,3] + df[k,2]
     }
-    df
     
     ## fill in the table of END julian values
     df[1,4] <- df[1,2]
     for (m in 1:5){ ## changed from (m in 1:4)
       df[m+1,4] <- df[m,4] + df[m+1,2]
     }
-    df
     
     ## fill in the table of real julian values - just add (start_date_julian -1) to each start_jul_1 value.
     df$start_jul_real <- df$start_jul_1 + start_date_julian - 1
-    df
     df$end_jul_real <- df$end_jul_1 + start_date_julian - 1
-    df
     
     #### Part 2 - convert Julian dates to real dates over 2001 to 2002 by adding julian number to "2000-12-31"
     df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$start_jul_real)
@@ -157,6 +145,7 @@ phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, 
     
   }
   
+  ## return table
   df
 }
 
@@ -325,6 +314,19 @@ plotCycle <- function(table, species_type) {
        labels=as.character(m),
        pos = 3, xpd=TRUE)
   legend(x="topleft", fill=mycols, legend=c("pre-laying","incubation","brood-guard","post-guard","non-breeding"))
+}
+
+#### 1.8 Main function: make a table of the life-history stages for the introduction ----
+makeLifeStagesTable <- function(){
+  df <- data.frame(stages = c("Breeding adults", "- Successful breeders", "- Fail breeders", "Non-breeding adults", "Immatures", "Juveniles"),
+                   details = c("Adults attempting to breed in a given year", 
+                               "- Breeders which complete the full breeding cycle, through to chick fledging",
+                               "- Breeders which fail partway through the breeding cycle *",
+                               "Adults not attempting to breed in a given year (sabbaticals; deferrals)",
+                               "Birds aged from second year at sea until the age of first breeding",
+                               "Fledglings in their first year at sea"))
+  colnames(df) <- c("Life-history stage", "Details")
+  df
 }
 
 

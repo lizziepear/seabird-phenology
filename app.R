@@ -12,7 +12,7 @@ library(shiny)
 library(shinydashboard)
 library(lubridate)
 
-# setwd("C:/Users/Lizzie/OneDrive/Documents/PROJECTS/seabird-phenology")
+setwd("C:/Users/eliza/OneDrive/Documents/PROJECTS/seabird-phenology") ## CHANGE TO YOUR DIRECTORY
 
 ## load source functions
 source("functions_phenology.R")
@@ -20,48 +20,62 @@ source("functions_phenology.R")
 #### writing inputs ----
 
 html_to_insert_flowchart <- paste0('
-          <img src="flowchart_v2.png" alt="method framework" height="600" width="800">
-          <br>
-          <p>References:</p>
-          <ul>
-          <li>[a] Lascelles et al. (2016)</li>
-          <li>[b] Oppel et al. (2018)</li>
-          </ul>
+  <h3>Mapping the global distribution of seabird populations:</h3>
+  <h4>a framework for integrating tracking, demographic and phenological datasets</h4>
+  <br>
+  <h4>More details and R scripts can be found at the <a href="https://github.com/anacarneiro/DensityMaps">GitHub page</a>.</h4>
+  <br>  
+  <img src="flowchart_v2.png" alt="method framework" height="600" width="800">
+  <br>
+  <p>References:</p>
+  <ul>
+    <li>[a] <a href="https://doi.org/10.1111/ddi.12411">Lascelles <em>et al.</em> (2016)</a> Applying global criteria to tracking data to define important areas for marine conservation. <em>Diversity and Distributions.</em></li>
+    <li>[b] <a href="https://doi.org/10.1016/j.marpol.2018.08.024">Oppel <em>et al.</em> (2018)</a> Spatial scales of marine conservation management for breeding seabirds. <em>Marine Policy.</em></li>
+  </ul>
         ')
 
-html_framework <- paste0('
-  <p>Steps in the framework:
-	  <ol>
-		  <li>Download data from the Seabird Tracking Database</li>
-		  <li>Create one .csv file per species</li>
-		  <li>Follow the instructions and run the R files (in the corresponding order):</li>
-		    <ul>
-			    <li>01_demography</li>
-			    <li>02_cleaning_data</li>
-			    <li>03_kernels</li>
-		    </ul>
-		  <li>Do a bootstrap analysis - following instructions in [1] and [2]</li>
-		  <li>Follow the instructions and run the R scripts (in the corresponding order):</li>
-		    <ul>
-			    <li>04_combining_selecting_renaming</li>
-			    <li>05_land_mask</li>
-		    </ul>
-		  <li>Create metadata based on phenology</li>
-        <ul>
-          <li>Use this app to help fill in the template</li>
-        </ul>
-      <li>Follow the instructions and run the R scripts (in the corresponding order):</li>
-        <ul>
-          <li>06_combining_metadata_files (only combine with the the demography results if downloading your metadata using this app)</li>
-          <li>07_monthly_equations</li>
-          <li>08_quarter_combinations</li>
-          <li>09_sum_demClasses</li>
-          <li>10_aggregate_5by5_grid</li>
-          <li>11_year_combination</li>
-        </ul>
-	  </ol>
+html_intro_1 <- paste0('
+  <h3>How to use this app</h3>
+  <p>
+    This app has been developed to help users create monthly phenology tables for each life-history stage in a population from known average phenology timings. These tables are then used to create equations to combine distribution rasters of each breeding stage, in the correct weightings, to produce an average monthly distribution raster for each pool of individuals in the population.
   </p>
+
+  <ol>
+    <li>Click <strong>Explore phenology tables</strong> on the left</li>
+    <li>Enter the average phenology timings for your population (see <em>inputs</em> below) and explore the resulting breeding cycle timings and monthly tables for each life-history stage</li>
+    <li>If you are using the framework, click <strong>Download files</strong> and follow the instructions to download a .csv file of monthly phenology metadata for your population, to use in the R scripts provided (see <strong>R scripts for framework</strong>)</li>
+  </ol>
+  
+                         
+  <h3>Inputs:</h3>
+  <ul>
+    <li>Average egg laying date for your population</li>
+    <li>Average duration in days of the different stages of the breeding cycle:
+      <ul>
+        <li>pre-laying exodus</li>
+        <li>incubation</li>
+        <li>brood-guard</li>
+        <li>post-brood</li>
+      </ul>
+    </li>
+    <li>Breeding cycle type (see box for examples breeding cycles of annual and biennial species).</li>
+  </ul>
+
+  <h3>Outputs:</h3>
+  <ul>
+    <li>Summary phenology table for your population, showing dates and durations of each stage of the breeding cycle</li>
+    <li>Monthly phenology tables for each life-history stage of the population. These tables show the average number of days in each month spent in each stage of the breeding cycle, and are used for weighting distribution rasters when creating monthly distributions for each life-history stage.</li>
+    <li>Downloadable csv file of full phenology metadata, in the correct format for input into the rest of the R scripts for the analysis framework.</li>
+  </ul>
   ')
+
+html_intro_2 <- paste0('
+  <p>* In the absence of more detailed data, we assume that fail breeders fail halfway between the start of incubation (egg-laying date) and the end of the post-brood stage (chick-fledging).</p>
+  <p>
+    <strong>Biennial species: </strong><br>
+    If the full breeding cycle lasts longer than one full year, we truncate the end of post-brood before calculating the monthly tables, so that the cycle lasts 365 days only. This simplifies the analysis, enabling the same methods to be used for both annual and biennial species.
+  </p>
+                       ')
 
 #### construct app ----
 
@@ -69,17 +83,13 @@ sidebar <- dashboardSidebar(
   width = 250,
   sidebarMenu(
     menuItem("Introduction", tabName = "introduction", icon = icon("map-signs")
-    ), # 
+    ), 
     menuItem("Framework", tabName = "framework", icon = icon("compass")
     ),
-    menuItem("Explore phenology tables", tabName = "phenology", icon = icon("calendar-alt")#,
-      # menuSubItem("Explore phenology", tabName = "phen_inputs", icon = icon("calendar-alt"))
-    ), # 
-    
-    # menuItem(actionLink(inputId = "goMetaDownload", label = "Download phenology metadata", icon = icon("file-csv"))),
+    menuItem("Explore phenology tables", tabName = "phenology", icon = icon("calendar-alt")
+    ),
     
     menuItem("Download files", tabName = "download", icon = icon("file-download")
-      # menuSubItem(actionLink(inputId = "goMetaDownload", label = tagList(shiny::icon("file-download")," Phenology metadata"))
     ),
     
     menuItem("Source code for this app", icon = icon("external-link-alt"), href = "https://github.com/lizziepear/seabird-phenology"),
@@ -87,12 +97,8 @@ sidebar <- dashboardSidebar(
     menuItem("Seabird Tracking Database", icon = icon("external-link-alt"), href = "http://seabirdtracking.org"),
     
     HTML('<a href="http://www.birdlife.org/">
-      <img src="BLI_logo.png" alt="BirdLife Internationl" style="width:220px;position:fixed;bottom:0;padding:10px;">
+      <img src="BLI_logo.png" alt="BirdLife International" style="width:220px;position:fixed;bottom:0;padding:10px;">
       </a>')
-    
-    # img(style="position:fixed;bottom:0;padding:10px;", src="BLI_logo.png", width= 220, alt = "BirdLife International")
-    
-    # div(class="footer", img(src="BLI_logo.png", width = 220))
     
   )
 )
@@ -104,24 +110,25 @@ body <- dashboardBody(
     tags$link(href="https://fonts.googleapis.com/css?family=Bree+Serif&display=swap", rel="stylesheet")
   ),
   
-  tags$script(HTML("$('body').addClass('fixed');")),
-  # tags$head(tags$style(".sidebar-menu li { margin-bottom: 100px; }")),
-  # tags$img(align="right", src="logo.png", height=30),
+  tags$script(HTML("$('body').addClass('fixed');")), ## make the sidebar fixed.
   
   tabItems(
     tabItem(tabName = "introduction",
-            h2("Mapping the global distribution of seabird populations: a framework for integrating tracking, demographic and phenological datasets"),
-            h4("This app is designed to help users understand the methods for incoporating phenology into seabird density maps, and create their own phenology metadata tables for including in the framework presented."),
-      box(title = "Steps in the framework", status = "primary", width = 6, solidHeader = TRUE, 
-          HTML(html_framework)
+            h2("Mapping the global distribution of seabird populations:"),
+            h3("A framework for integrating tracking, demographic and phenological datasets"), tags$br(),
+            h4("This app is designed to help users understand the methods for incoporating phenology into seabird density maps, and create their own phenology metadata tables for use in the framework."), tags$br(),
+      box(title = "Introduction", status = "primary", width = 6, solidHeader = TRUE, 
+          HTML(html_intro_1),
+          tableOutput("lifeStagesTable"),
+          HTML(html_intro_2)
       ),
-      box(title = "Example of annual species breeding cycle", status = "success", width = 6, solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+      box(title = "Example of annual species breeding cycle", status = "success", width = 6, solidHeader = TRUE, collapsible = TRUE,
           p(strong("Species / population: "), "Black-browed Albatross, Falkland Islands"),
           tableOutput("phenTabBBA"),
           p(strong("Cycle spans one year:")),
           plotOutput("cycleBBA", width = "600px", height = "250px")
       ),
-      box(title = "Example of biennial species breeding cycle", status = "success", width = 6, solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+      box(title = "Example of biennial species breeding cycle", status = "success", width = 6, solidHeader = TRUE, collapsible = TRUE,
           p(strong("Species / population: "), "Tristan Albatross, Gough Island"),
           tableOutput("phenTabTRA"),
           p(strong("Cycle spans two years:")),
@@ -145,7 +152,7 @@ body <- dashboardBody(
           tags$br(), tags$br(),
           downloadButton(outputId = "phenDownload", label = "Step 2. Download full phenology metadata table as a .csv file", icon = icon("file-download")),
           tags$br(), tags$br(),
-          p(tags$strong("Please note:"), " you will need to fill in some fields manually:", tags$ul(tags$li("Device type"), tags$li("Replacement distributions to use (both Age and Breed Stage)")))
+          p(tags$strong("Please note:"), " you will need to fill in some fields manually:", tags$ul(tags$li("Device type"), tags$li("Replacement distributions to use (in the case of unavailable tracking data) for both Age and Breed Stage)")))
           ),
       
       box(title = "Full metadata table", status = "success", width = 12, solidHeader = TRUE, collapsible = TRUE,
@@ -217,6 +224,11 @@ ui <- dashboardPage(
 )
 
 server <- function(input, output) {
+  
+  ################# Life-history stages table #############################
+  output$lifeStagesTable <- renderTable({
+    makeLifeStagesTable()
+  })
   
   ################# Example breeding cycles for first page #############################
   ### Biennial example: Tristan Albatross, Gough island
