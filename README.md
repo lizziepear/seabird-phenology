@@ -2,7 +2,7 @@
 
 R Shiny app to create monthly phenology tables for each pool of individuals in a population, and create equations to combine distribution rasters for each breeding stage with the correct weightings to produce an average monthly distribution raster for each group. 
 
-This is part of the framework developed by Ana Carneiro & Lizzie Pearmain as part of the methods paper Carneiro *et al*. (in prep) '**Mapping the global distribution of seabird populations: a framework for integrating tracking, demographic and phenological datasets**'. R scripts for the rest of the framework are available at https://github.com/anacarneiro/DensityMaps.
+This is part of the framework developed by Ana Carneiro & Lizzie Pearmain as part of the methods paper Carneiro *et al*. (in prep) '**Mapping the global distribution of seabird populations: a framework for integrating tracking, demographic and phenological datasets**'. R scripts for the rest of the framework are available at [Ana's GitHub page](https://github.com/anacarneiro/DensityMaps).
 
 ### Inputs:
 - Average egg-laying date for the population;
@@ -21,12 +21,20 @@ This is part of the framework developed by Ana Carneiro & Lizzie Pearmain as par
 
 ## How to run this app
 
+### Option 1: run the online version
+* Go to my [shinyapps.io](https://lizziepear.shinyapps.io/seabird-phenology/) page to run the online version of the app.
+    * Please note: I only have 25 active hours per month for this app, so if it will not load it means the hours have run out. You will need to download the app and run it locally instead.
+
+### Option 2: run locally
 1. Download the source code from this repository;
 1. Ensure you have an updated version of R and RStudio installed;
 1. Open the file `app.R` in RStudio;
 1. Ensure you have the required packages installed and loaded: `shiny`, `shinydashboard`, `lubridate`;
 1. Change the working directory in line 15 to your working directory;
-1. Click 'Run App' in the top right-hand corner of RStudio's code editor.
+1. Click 'Run App' in the top right-hand corner of RStudio's code editor;
+1. Click 'Open in browser' in the top menu of the app to open in the browser of your choice (or, use it in the RStudio browser).
+
+If you have trouble loading the app, please use the [resources](https://shiny.rstudio.com/tutorial/) on the R Shiny website to troubleshoot.
 
 ## License information
 This software is licensed under the GNU General Public License version 3 (see LICENSE.md).
