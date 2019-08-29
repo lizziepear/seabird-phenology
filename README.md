@@ -38,3 +38,4 @@ If you have trouble loading the app, please use the [resources](https://shiny.rs
 
 ## License information
 This software is licensed under the GNU General Public License version 3 (see LICENSE.md).
+Please note that this licence does not apply to any logos, emblems and trade marks on the app or to the app’s design elements or to any photography or imagery. Those specific items may not be re-used without express permission.
