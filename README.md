@@ -28,9 +28,9 @@ This is part of the framework developed by Ana Carneiro & Lizzie Pearmain as par
 ### Option 2: run locally
 1. Download the source code from this repository;
 1. Ensure you have an updated version of R and RStudio installed;
-1. Open the file `app.R` in RStudio;
+1. Open the file `seabird-phenology.Rproj` in RStudio;
+1. Open the file `app.R` if it is not already open;
 1. Ensure you have the required packages installed and loaded: `shiny`, `shinydashboard`, `lubridate`;
-1. Change the working directory in line 15 to your working directory;
 1. Click 'Run App' in the top right-hand corner of RStudio's code editor;
 1. Click 'Open in browser' in the top menu of the app to open in the browser of your choice (or, use it in the RStudio browser).
 
