@@ -6,13 +6,12 @@
 ## You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rm(list=ls())
+
+## load packages
 
 library(shiny)
 library(shinydashboard)
 library(lubridate)
-
-setwd("C:/Users/eliza/OneDrive/Documents/PROJECTS/seabird-phenology") ## CHANGE TO YOUR DIRECTORY
 
 ## load source functions
 source("functions_phenology.R")
