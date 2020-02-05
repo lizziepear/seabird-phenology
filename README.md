@@ -2,7 +2,7 @@
 
 R Shiny app to create monthly phenology tables for each pool of individuals in a population, and create equations to combine distribution rasters for each breeding stage with the correct weightings to produce an average monthly distribution raster for each group. 
 
-This is part of the framework developed by Ana Carneiro & Lizzie Pearmain as part of the methods paper Carneiro *et al*. (in prep) '**Mapping the global distribution of seabird populations: a framework for integrating tracking, demographic and phenological datasets**'. R scripts for the rest of the framework are available at [Ana's GitHub page](https://github.com/anacarneiro/DensityMaps).
+This is part of the framework developed by Ana Carneiro & Lizzie Pearmain as part of the methods paper Carneiro, A.P.B. *et al*. (2020) '**A framework for mapping the distribution of seabirds by integrating tracking, demography and phenology**', *Journal of Applied Ecology*. The paper can be found [here](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.13568) and R scripts for the rest of the framework are available at [Ana's GitHub page](https://github.com/anacarneiro/DensityMaps).
 
 ### Inputs:
 - Average egg-laying date for the population;
