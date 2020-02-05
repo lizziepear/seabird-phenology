@@ -92,8 +92,8 @@ phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, 
     df$end_jul_real <- df$end_jul_1 + start_date_julian - 1
     
     #### Part 2 - convert Julian dates to real dates over 2001 to 2002 by adding julian number to "2000-12-31"
-    df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$start_jul_real)
-    df$end_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$end_jul_real)
+    df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + lubridate::days(df$start_jul_real)
+    df$end_date <- as.Date("2000-12-31", format="%Y-%m-%d") + lubridate::days(df$end_jul_real)
     
     #### Part 3 - make pretty versions for start and end date for displaying in the table
     df$start_display <- as.character(format(df$start_date, "%d-%b"))
@@ -136,8 +136,8 @@ phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, 
     df$end_jul_real <- df$end_jul_1 + start_date_julian - 1
     
     #### Part 2 - convert Julian dates to real dates over 2001 to 2002 by adding julian number to "2000-12-31"
-    df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$start_jul_real)
-    df$end_date <- as.Date("2000-12-31", format="%Y-%m-%d") + days(df$end_jul_real)
+    df$start_date <- as.Date("2000-12-31", format="%Y-%m-%d") + lubridate::days(df$start_jul_real)
+    df$end_date <- as.Date("2000-12-31", format="%Y-%m-%d") + lubridate::days(df$end_jul_real)
     
     #### Part 3 - make pretty versions for start and end date for displaying in the table
     df$start_display <- as.character(format(df$start_date, "%d-%b"))
@@ -152,7 +152,7 @@ phenTable1Succ <- function(laydate_string, prelay_length_days, inc_length_days, 
 #### 1.4 Helper function 3: find the fail date based on table of SUCC breeders NB. MIGHT NOT NEED THIS ----
 findFailDate <- function(table){
   breed_interval <- interval(table[2,7], table[4,8]) ## interval from start of INC to end of PSB
-  fail_date <- breed_interval@start + as.duration(breed_interval)/2 + days(1) ## find failure date as mean of breed_interval: ex@start + as.duration(ex)/2
+  fail_date <- breed_interval@start + as.duration(breed_interval)/2 + lubridate::days(1) ## find failure date as mean of breed_interval: ex@start + as.duration(ex)/2
   fail_date <- as.character(format(fail_date, "%d-%b"))
   return(fail_date)
 }
